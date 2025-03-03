@@ -63,8 +63,8 @@ ntfs_file::ntfs_file(ntfs& dev, uint64_t inode) : dev(dev), inode(inode) {
     file_record_buf.resize((size_t)dev.file_record_size);
 
     if (inode == 0) {
-        dev.seek(dev.boot_sector->MFT * dev.boot_sector->BytesPerSector * dev.boot_sector->SectorsPerCluster);
-        dev.read(file_record_buf.data(), (uint32_t)dev.file_record_size);
+        dev.read(dev.boot_sector->MFT * dev.boot_sector->BytesPerSector * dev.boot_sector->SectorsPerCluster,
+                 file_record_buf.data(), (uint32_t)dev.file_record_size);
     } else { // read from MFT
         auto str = dev.mft->read(inode * dev.file_record_size, (uint32_t)dev.file_record_size);
 
@@ -203,16 +203,14 @@ buffer_t ntfs_file::read_nonresident_attribute(uint64_t offset, uint32_t length,
             } else
                 skip_end = 0;
 
-            dev.seek(read_start);
-
             if (skip_start != 0 || skip_end != 0) {
                 buffer_t tmp(read_end - read_start);
 
-                dev.read(tmp.data(), tmp.size());
+                dev.read(read_start, tmp.data(), tmp.size());
 
                 memcpy(&ret[buf_start], &tmp[skip_start], buf_end - buf_start);
             } else
-                dev.read(&ret[buf_start], buf_end - buf_start);
+                dev.read(read_start, &ret[buf_start], buf_end - buf_start);
         }
     }
 
@@ -336,8 +334,7 @@ ntfs::ntfs(const string& fn) {
 
     // read NTFS_BOOT_SECTOR
     boot_sector_buf.resize((size_t)sector_align(sizeof(NTFS_BOOT_SECTOR), sector_size));
-    seek(0);
-    read(boot_sector_buf.data(), boot_sector_buf.size());
+    read(0, boot_sector_buf.data(), boot_sector_buf.size());
     boot_sector = reinterpret_cast<NTFS_BOOT_SECTOR*>(boot_sector_buf.data());
 
     // make sure is NTFS
@@ -381,8 +378,8 @@ static buffer_t read_from_mappings(const list<mapping>& mappings, uint64_t start
 
             buffer_t buf((uint32_t)(read_end - read_start));
 
-            dev.seek(read_start + ((m.lcn - m.vcn) * cluster_size));
-            dev.read(buf.data(), (uint32_t)(read_end - read_start));
+            dev.read(read_start + ((m.lcn - m.vcn) * cluster_size), buf.data(),
+                     (uint32_t)(read_end - read_start));
 
             memcpy(s.data(), buf.data() + read_start - start, (size_t)min(read_end - read_start, length - read_start + start));
         }
@@ -767,21 +764,29 @@ void ntfs::seek(uint64_t pos) {
 #endif
 }
 
-void ntfs::read(uint8_t* buf, size_t length) {
+void ntfs::read(uint64_t offset, uint8_t* buf, size_t length) {
 #ifdef _WIN32
+    LARGE_INTEGER posli;
     DWORD read;
+
+    posli.QuadPart = offset;
+
+    if (!SetFilePointerEx(h, posli, nullptr, FILE_BEGIN))
+        throw last_error("SetFilePointerEx", GetLastError());
 
     if (!ReadFile(h, buf, (DWORD)length, &read, nullptr))
         throw last_error("ReadFile", GetLastError());
 #else
-    auto pos = lseek(fd, 0, SEEK_CUR);
+    if (lseek(fd, offset, SEEK_SET) == -1)
+        throw formatted_error("Error seeking to {:x} (errno = {}).", offset, errno);
+
     auto orig_length = length;
 
     do {
         auto ret = ::read(fd, buf, length);
 
         if (ret < 0)
-            throw formatted_error("Error reading {:x} bytes at {:x} (errno {}).", orig_length, pos, errno);
+            throw formatted_error("Error reading {:x} bytes at {:x} (errno {}).", orig_length, offset, errno);
 
         if ((size_t)ret == length)
             break;
