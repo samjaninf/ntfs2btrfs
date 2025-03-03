@@ -282,7 +282,7 @@ list<mapping> ntfs_file::read_mappings(enum ntfs_attribute type, u16string_view 
 }
 
 ntfs::ntfs(const string& fn) {
-    unsigned int sector_size = 512; // FIXME - find from device
+    unsigned int sector_size = 512;
 
 #ifdef _WIN32
     bool drive = false;
@@ -304,6 +304,18 @@ ntfs::ntfs(const string& fn) {
         throw last_error("CreateFile", GetLastError());
 
     if (drive) {
+        DISK_GEOMETRY geom;
+
+        if (!DeviceIoControl(h, IOCTL_DISK_GET_DRIVE_GEOMETRY, nullptr, 0, &geom, sizeof(geom), &ret, nullptr)) {
+            auto le = GetLastError();
+
+            CloseHandle(h);
+
+            throw last_error("IOCTL_DISK_GET_DRIVE_GEOMETRY", le);
+        }
+
+        sector_size = geom.BytesPerSector;
+
         if (!DeviceIoControl(h, FSCTL_LOCK_VOLUME, nullptr, 0, nullptr, 0, &ret, nullptr)) {
             auto le = GetLastError();
 
@@ -318,6 +330,8 @@ ntfs::ntfs(const string& fn) {
 
     if (fd < 0)
         throw formatted_error("open returned {} (errno = {}).", fd, errno);
+
+    // FIXME - find sector size from device
 #endif
 
     // read NTFS_BOOT_SECTOR
