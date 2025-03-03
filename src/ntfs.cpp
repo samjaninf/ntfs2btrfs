@@ -750,20 +750,6 @@ string ntfs_file::get_filename() {
     return utf16_to_utf8(retw);
 }
 
-void ntfs::seek(uint64_t pos) {
-#ifdef _WIN32
-    LARGE_INTEGER posli;
-
-    posli.QuadPart = pos;
-
-    if (!SetFilePointerEx(h, posli, nullptr, FILE_BEGIN))
-        throw last_error("SetFilePointerEx", GetLastError());
-#else
-    if (lseek(fd, pos, SEEK_SET) == -1)
-        throw formatted_error("Error seeking to {:x} (errno = {}).", pos, errno);
-#endif
-}
-
 void ntfs::read(uint64_t offset, uint8_t* buf, size_t length) {
 #ifdef _WIN32
     LARGE_INTEGER posli;
@@ -791,31 +777,41 @@ void ntfs::read(uint64_t offset, uint8_t* buf, size_t length) {
         if ((size_t)ret == length)
             break;
 
+        offset += ret;
         buf += ret;
         length -= ret;
     } while (true);
 #endif
 }
 
-void ntfs::write(const uint8_t* buf, size_t length) {
+void ntfs::write(uint64_t offset, const uint8_t* buf, size_t length) {
 #ifdef _WIN32
+    LARGE_INTEGER posli;
     DWORD written;
+
+    posli.QuadPart = offset;
+
+    if (!SetFilePointerEx(h, posli, nullptr, FILE_BEGIN))
+        throw last_error("SetFilePointerEx", GetLastError());
 
     if (!WriteFile(h, buf, (DWORD)length, &written, nullptr))
         throw last_error("WriteFile", GetLastError());
 #else
-    auto pos = lseek(fd, 0, SEEK_CUR);
+    if (lseek(fd, offset, SEEK_SET) == -1)
+        throw formatted_error("Error seeking to {:x} (errno = {}).", offset, errno);
+
     auto orig_length = length;
 
     do {
         auto ret = ::write(fd, buf, length);
 
         if (ret < 0)
-            throw formatted_error("Error writing {:x} bytes at {:x} (errno {}).", orig_length, pos, errno);
+            throw formatted_error("Error writing {:x} bytes at {:x} (errno {}).", orig_length, offset, errno);
 
         if ((size_t)ret == length)
             break;
 
+        offset += ret;
         buf += ret;
         length -= ret;
     } while (true);

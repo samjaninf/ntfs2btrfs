@@ -530,9 +530,8 @@ public:
 #endif
     }
 
-    void seek(uint64_t pos);
     void read(uint64_t offset, uint8_t* buf, size_t length);
-    void write(const uint8_t* buf, size_t length);
+    void write(uint64_t offset, const uint8_t* buf, size_t length);
     std::string_view find_sd(uint32_t id, ntfs_file& secure);
 
     std::unique_ptr<ntfs_file> mft;

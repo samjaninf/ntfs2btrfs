@@ -906,8 +906,7 @@ void root::write_trees(ntfs& dev) {
 
                 // FIXME - handle DUP
 
-                dev.seek(physaddr);
-                dev.write(t.data(), t.size());
+                dev.write(physaddr, t.data(), t.size());
 
                 found = true;
                 break;
@@ -1072,8 +1071,7 @@ static void write_superblocks(ntfs& dev, root& chunk_root, root& root_root, enum
                 break;
         }
 
-        dev.seek(superblock_addrs[i]);
-        dev.write(buf.data(), buf.size());
+        dev.write(superblock_addrs[i], buf.data(), buf.size());
 
         i++;
     }
@@ -2970,8 +2968,8 @@ static void add_inode(root& r, uint64_t inode, uint64_t ntfs_inode, bool& is_dir
 
                 memset(sector.data() + (vdl % sector_size), 0, sector_size - (vdl % sector_size));
 
-                dev.seek((mappings.back().lcn + mappings.back().length - 1) * cluster_size);
-                dev.write(sector.data(), sector.size());
+                dev.write((mappings.back().lcn + mappings.back().length - 1) * cluster_size,
+                          sector.data(), sector.size());
             }
         }
 
@@ -3082,12 +3080,10 @@ static void add_inode(root& r, uint64_t inode, uint64_t ntfs_inode, bool& is_dir
                 ed2.address = allocate_data(ed2.size, true);
                 ed2.offset = 0;
 
-                dev.seek(ed2.address - chunk_virt_offset);
-
                 if (ed.compression == btrfs_compression::none)
-                    dev.write((uint8_t*)data.data(), (size_t)len);
+                    dev.write(ed2.address - chunk_virt_offset, (uint8_t*)data.data(), (size_t)len);
                 else
-                    dev.write(compdata.data(), compdata.size());
+                    dev.write(ed2.address - chunk_virt_offset, compdata.data(), compdata.size());
 
                 add_item(r, inode, btrfs_key_type::EXTENT_DATA, pos, buf);
 
@@ -3558,9 +3554,7 @@ static void protect_cluster(ntfs& dev, runs_t& runs, uint64_t cluster) {
         data.resize((size_t)cluster_size);
 
     dev.read(cluster * cluster_size, data.data(), data.size());
-
-    dev.seek(addr);
-    dev.write(data.data(), data.size());
+    dev.write(addr, data.data(), data.size());
 
     relocs.emplace_back(cluster, 1, addr / cluster_size);
 
@@ -3636,8 +3630,7 @@ static void clear_first_cluster(ntfs& dev) {
 
     memset(data.data(), 0, data.size());
 
-    dev.seek(0);
-    dev.write(data.data(), data.size());
+    dev.write(0, data.data(), data.size());
 }
 
 static void calc_used_space(const runs_t& runs, uint32_t cluster_size) {
