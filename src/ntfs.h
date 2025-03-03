@@ -536,7 +536,7 @@ public:
 
     std::unique_ptr<ntfs_file> mft;
     buffer_t boot_sector_buf;
-    NTFS_BOOT_SECTOR* boot_sector;
+    NTFS_BOOT_SECTOR* boot_sector = nullptr;
     uint64_t file_record_size;
     std::map<uint32_t, buffer_t> sd_list;
 

@@ -751,6 +751,30 @@ string ntfs_file::get_filename() {
 }
 
 void ntfs::read(uint64_t offset, uint8_t* buf, size_t length) {
+    buffer_t tmpbuf;
+    uint64_t orig_offset, orig_length;
+    uint8_t* orig_buf = nullptr;
+
+    if (boot_sector) {
+        const auto sector_size = boot_sector->BytesPerSector;
+
+        if (offset % sector_size || length % sector_size) {
+            orig_offset = offset;
+            orig_length = length;
+            orig_buf = buf;
+
+            offset -= offset % sector_size;
+            length += orig_offset - offset;
+
+            if (length % sector_size)
+                length += sector_size - (length % sector_size);
+
+            tmpbuf.resize(length);
+
+            buf = tmpbuf.data();
+        }
+    }
+
 #ifdef _WIN32
     LARGE_INTEGER posli;
     DWORD read;
@@ -766,13 +790,13 @@ void ntfs::read(uint64_t offset, uint8_t* buf, size_t length) {
     if (lseek(fd, offset, SEEK_SET) == -1)
         throw formatted_error("Error seeking to {:x} (errno = {}).", offset, errno);
 
-    auto orig_length = length;
+    auto orig_length2 = length;
 
     do {
         auto ret = ::read(fd, buf, length);
 
         if (ret < 0)
-            throw formatted_error("Error reading {:x} bytes at {:x} (errno {}).", orig_length, offset, errno);
+            throw formatted_error("Error reading {:x} bytes at {:x} (errno {}).", orig_length2, offset, errno);
 
         if ((size_t)ret == length)
             break;
@@ -782,6 +806,9 @@ void ntfs::read(uint64_t offset, uint8_t* buf, size_t length) {
         length -= ret;
     } while (true);
 #endif
+
+    if (orig_buf)
+        memcpy(orig_buf, tmpbuf.data() + orig_offset - offset, orig_length);
 }
 
 void ntfs::write(uint64_t offset, const uint8_t* buf, size_t length) {
