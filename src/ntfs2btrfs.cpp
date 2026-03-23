@@ -2929,29 +2929,29 @@ static void add_inode(root& r, uint64_t inode, uint64_t ntfs_inode, bool& is_dir
         process_mappings(dev, inode, mappings, runs);
 
         if (vdl < file_size) {
-            uint64_t alloc_size = sector_align(file_size, sector_size);
-            uint64_t alloc_vdl = sector_align(vdl, sector_size);
+            uint64_t alloc_size = sector_align(file_size, cluster_size);
+            uint64_t alloc_vdl = sector_align(vdl, cluster_size);
 
-            if (!mappings.empty() && (mappings.back().vcn + mappings.back().length) < alloc_size / sector_size) {
+            if (!mappings.empty() && (mappings.back().vcn + mappings.back().length) < alloc_size / cluster_size) {
                 mappings.emplace_back(0, mappings.back().vcn + mappings.back().length,
-                                        (alloc_size / sector_size) - mappings.back().vcn - mappings.back().length);
+                                        (alloc_size / cluster_size) - mappings.back().vcn - mappings.back().length);
             }
 
-            while (alloc_vdl < alloc_size) { // for whole sectors, replace with sparse extents
+            while (alloc_vdl < alloc_size) { // for whole clusters, replace with sparse extents
                 if (!mappings.empty()) {
                     auto& m = mappings.back();
 
-                    if (m.length * sector_size > alloc_size - alloc_vdl) {
-                        uint64_t sub = (alloc_size - alloc_vdl) / sector_size;
+                    if (m.length * cluster_size > alloc_size - alloc_vdl) {
+                        uint64_t sub = (alloc_size - alloc_vdl) / cluster_size;
 
                         if (sub > 0) {
-                            m.length -= sub * sector_size;
-                            alloc_size -= sub * sector_size;
+                            m.length -= sub;
+                            alloc_size -= sub * cluster_size;
                         }
 
                         break;
                     } else {
-                        alloc_size -= m.length * sector_size;
+                        alloc_size -= m.length * cluster_size;
                         mappings.pop_back();
                     }
                 } else {
@@ -2961,15 +2961,16 @@ static void add_inode(root& r, uint64_t inode, uint64_t ntfs_inode, bool& is_dir
             }
 
             if (vdl < alloc_size) { // zero end of final sector if necessary
+                uint64_t last_cluster_start = (mappings.back().lcn + mappings.back().length - 1) * cluster_size;
+                uint64_t sector_in_cluster = (vdl % cluster_size) / sector_size * sector_size;
+
                 buffer_t sector(sector_size);
 
-                dev.read((mappings.back().lcn + mappings.back().length - 1) * cluster_size,
-                         sector.data(), sector.size());
+                dev.read(last_cluster_start + sector_in_cluster, sector.data(), sector.size());
 
                 memset(sector.data() + (vdl % sector_size), 0, sector_size - (vdl % sector_size));
 
-                dev.write((mappings.back().lcn + mappings.back().length - 1) * cluster_size,
-                          sector.data(), sector.size());
+                dev.write(last_cluster_start + sector_in_cluster, sector.data(), sector.size());
             }
         }
 
