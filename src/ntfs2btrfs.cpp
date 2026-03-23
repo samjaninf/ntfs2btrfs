@@ -3382,7 +3382,8 @@ static void calc_checksums(root& csum_root, runs_t runs, ntfs& dev, enum btrfs_c
 
     auto max_run = (uint32_t)((tree_size - sizeof(tree_header) - (sizeof(leaf_node) * 2)) / csum_size) - 1;
 
-    // FIXME - these are clusters, when they should be sectors
+    // max_run is in sectors; convert to clusters for the run lists
+    uint32_t max_run_clusters = max_run / (cluster_size / sector_size);
 
     // split and merge runs
 
@@ -3398,13 +3399,13 @@ static void calc_checksums(root& csum_root, runs_t runs, ntfs& dev, enum btrfs_c
                 continue;
             }
 
-            if (first || runs2.back().offset + runs2.back().length < r.offset || runs2.back().length == max_run) {
+            if (first || runs2.back().offset + runs2.back().length < r.offset || runs2.back().length == max_run_clusters) {
                 // create new run
 
-                if (r.length > max_run) {
-                    runs2.emplace_back(r.offset, max_run);
-                    r.offset += max_run;
-                    r.length -= max_run;
+                if (r.length > max_run_clusters) {
+                    runs2.emplace_back(r.offset, max_run_clusters);
+                    r.offset += max_run_clusters;
+                    r.length -= max_run_clusters;
                 } else {
                     runs2.emplace_back(r.offset, r.length);
                     rs.pop_front();
@@ -3417,15 +3418,15 @@ static void calc_checksums(root& csum_root, runs_t runs, ntfs& dev, enum btrfs_c
 
             // continue existing run
 
-            if (runs2.back().length + r.length <= max_run) {
+            if (runs2.back().length + r.length <= max_run_clusters) {
                 runs2.back().length += r.length;
                 rs.pop_front();
                 continue;
             }
 
-            r.offset += max_run - runs2.back().length;
-            r.length -= max_run - runs2.back().length;
-            runs2.back().length = max_run;
+            r.offset += max_run_clusters - runs2.back().length;
+            r.length -= max_run_clusters - runs2.back().length;
+            runs2.back().length = max_run_clusters;
         }
     }
 
