@@ -3714,7 +3714,8 @@ static void convert(ntfs& dev, enum btrfs_compression compression, enum btrfs_cs
 
     static const uint64_t image_inode = 0x101;
 
-    // FIXME - die if cluster size not multiple of 4096
+    if (cluster_size % sector_size != 0)
+        throw formatted_error("Cluster size {} is not a multiple of sector size {}.", cluster_size, sector_size);
 
     {
         default_random_engine generator;
