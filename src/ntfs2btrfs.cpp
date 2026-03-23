@@ -3430,7 +3430,7 @@ static void calc_checksums(root& csum_root, runs_t runs, ntfs& dev, enum btrfs_c
     }
 
     for (const auto& r : runs2) {
-        total += r.length;
+        total += r.length * (cluster_size / sector_size);
     }
 
 #ifdef USE_MMAP
