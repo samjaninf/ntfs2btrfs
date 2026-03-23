@@ -3777,7 +3777,7 @@ static void convert(ntfs& dev, enum btrfs_compression compression, enum btrfs_cs
 
     // make sure runs don't go beyond end of device
 
-    while (!runs.empty() && (runs.rbegin()->second.back().offset * cluster_size) + runs.rbegin()->second.back().length > device_size) {
+    while (!runs.empty() && (runs.rbegin()->second.back().offset * cluster_size) + (runs.rbegin()->second.back().length * cluster_size) > device_size) {
         auto& r = runs.rbegin()->second;
 
         if (r.back().offset * cluster_size >= orig_device_size) {
