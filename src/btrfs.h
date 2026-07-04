@@ -377,13 +377,6 @@ struct btrfs_inode_ref {
     le16 name_len;
 } __attribute__ ((__packed__));
 
-typedef struct {
-    uint64_t dir;
-    uint64_t index;
-    uint16_t n;
-    char name[1];
-} INODE_EXTREF;
-
 #define EXTENT_ITEM_DATA            0x001
 #define EXTENT_ITEM_TREE_BLOCK      0x002
 #define EXTENT_ITEM_SHARED_BACKREFS 0x100
