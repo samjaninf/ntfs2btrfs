@@ -336,23 +336,24 @@ struct btrfs_root_item {
     le64 reserved[8];
 } __attribute__((packed));
 
-typedef struct {
-    uint64_t size;
-    uint64_t root_id;
-    uint64_t stripe_length;
-    uint64_t type;
-    uint32_t opt_io_alignment;
-    uint32_t opt_io_width;
-    uint32_t sector_size;
-    uint16_t num_stripes;
-    uint16_t sub_stripes;
-} CHUNK_ITEM;
-
-typedef struct {
-    uint64_t dev_id;
-    uint64_t offset;
+struct btrfs_stripe {
+    le64 devid;
+    le64 offset;
     btrfs_uuid dev_uuid;
-} CHUNK_ITEM_STRIPE;
+} __attribute__((packed));
+
+struct btrfs_chunk {
+    le64 length;
+    le64 owner;
+    le64 stripe_len;
+    le64 type;
+    le32 io_align;
+    le32 io_width;
+    le32 sector_size;
+    le16 num_stripes;
+    le16 sub_stripes;
+    btrfs_stripe stripe[1];
+} __attribute__((packed));
 
 typedef struct {
     uint64_t generation;

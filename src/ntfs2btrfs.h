@@ -278,11 +278,6 @@ public:
 #pragma pack(push,1)
 
 typedef struct {
-    CHUNK_ITEM chunk_item;
-    CHUNK_ITEM_STRIPE stripe;
-} chunk_item_one_stripe;
-
-typedef struct {
     EXTENT_ITEM extent_item;
     btrfs_key_type type;
     TREE_BLOCK_REF tbr;

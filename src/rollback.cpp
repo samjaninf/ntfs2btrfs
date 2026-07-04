@@ -156,9 +156,9 @@ const pair<const uint64_t, buffer_t>& btrfs::find_chunk(uint64_t addr) {
         if (addr < c.first)
             continue;
 
-        const auto& ci = *(CHUNK_ITEM*)c.second.data();
+        const auto& ci = *(btrfs_chunk*)c.second.data();
 
-        if (addr < c.first + ci.size)
+        if (addr < c.first + ci.length)
             return c;
     }
 
@@ -227,7 +227,7 @@ void btrfs::raw_write(uint64_t phys_addr, const buffer_t& buf) {
 
 buffer_t btrfs::read(uint64_t addr, uint32_t len) {
     const auto& cp = find_chunk(addr);
-    const auto& c = *(CHUNK_ITEM*)cp.second.data();
+    const auto& c = *(btrfs_chunk*)cp.second.data();
 
     if (c.type & BLOCK_FLAG_RAID0)
         throw runtime_error("FIXME - RAID 0");
@@ -249,14 +249,12 @@ buffer_t btrfs::read(uint64_t addr, uint32_t len) {
     // SINGLE
 
     if (c.num_stripes == 0)
-        throw runtime_error("CHUNK_ITEM had num_stripes == 0");
+        throw runtime_error("btrfs_chunk had num_stripes == 0");
 
-    auto* cis = (CHUNK_ITEM_STRIPE*)(&c + 1);
-
-    if (cis[0].dev_id != sb.dev_item.dev_id)
+    if (c.stripe[0].devid != sb.dev_item.dev_id)
         throw runtime_error("Reading from other device not implemented.");
 
-    return raw_read(addr - cp.first + cis[0].offset, len);
+    return raw_read(addr - cp.first + c.stripe[0].offset, len);
 }
 
 bool btrfs::walk_tree(uint64_t addr, const function<bool(const btrfs_key&, string_view)>& func) {
@@ -307,9 +305,9 @@ void btrfs::read_chunks() {
         if (key.type != btrfs_key_type::CHUNK_ITEM)
             break;
 
-        auto& ci = *(CHUNK_ITEM*)(ptr + sizeof(key));
+        auto& ci = *(btrfs_chunk*)(ptr + sizeof(key));
 
-        basic_string_view<uint8_t> chunk_item{ptr + sizeof(key), sizeof(ci) + (ci.num_stripes * sizeof(CHUNK_ITEM_STRIPE))};
+        basic_string_view<uint8_t> chunk_item{ptr + sizeof(key), offsetof(btrfs_chunk, stripe) + (ci.num_stripes * sizeof(btrfs_stripe))};
 
         chunks.emplace(+key.offset, buffer_t{chunk_item.data(), chunk_item.data() + chunk_item.size()});
 
@@ -449,7 +447,7 @@ void rollback(const string& fn) {
         auto len = e.second.second;
 
         auto& c = b.find_chunk(addr);
-        auto& ci = *(CHUNK_ITEM*)c.second.data();
+        auto& ci = *(btrfs_chunk*)c.second.data();
 
         if (ci.type & (BLOCK_FLAG_RAID0 | BLOCK_FLAG_RAID1 | BLOCK_FLAG_DUPLICATE |
                        BLOCK_FLAG_RAID10 | BLOCK_FLAG_RAID5 | BLOCK_FLAG_RAID6 |
@@ -458,9 +456,7 @@ void rollback(const string& fn) {
                                   c.first);
         }
 
-        auto* cis = (CHUNK_ITEM_STRIPE*)(&ci + 1);
-
-        auto physoff = addr - c.first + cis[0].offset;
+        auto physoff = addr - c.first + ci.stripe[0].offset;
 
         if (off == physoff) // identity map
             continue;

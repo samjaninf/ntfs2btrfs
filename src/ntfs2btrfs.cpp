@@ -485,24 +485,24 @@ static void add_item(root& r, uint64_t obj_id, btrfs_key_type obj_type, uint64_t
 }
 
 static void add_chunk(root& chunk_root, root& devtree_root, root& extent_root, const chunk& c) {
-    chunk_item_one_stripe ci1s;
+    btrfs_chunk ci1s;
     DEV_EXTENT de;
     BLOCK_GROUP_ITEM bgi;
 
-    memset(&ci1s, 0, sizeof(chunk_item_one_stripe));
+    memset(&ci1s, 0, sizeof(btrfs_chunk));
 
-    ci1s.chunk_item.size = c.length;
-    ci1s.chunk_item.root_id = BTRFS_ROOT_EXTENT;
-    ci1s.chunk_item.stripe_length = 0x10000;
-    ci1s.chunk_item.type = c.type;
-    ci1s.chunk_item.opt_io_alignment = 0x10000;
-    ci1s.chunk_item.opt_io_width = 0x10000;
-    ci1s.chunk_item.sector_size = 0x1000; // FIXME - get from superblock
-    ci1s.chunk_item.num_stripes = 1;
-    ci1s.chunk_item.sub_stripes = 1;
-    ci1s.stripe.dev_id = 1;
-    ci1s.stripe.offset = c.disk_start;
-    ci1s.stripe.dev_uuid = dev_uuid;
+    ci1s.length = c.length;
+    ci1s.owner = BTRFS_ROOT_EXTENT;
+    ci1s.stripe_len = 0x10000;
+    ci1s.type = c.type;
+    ci1s.io_align = 0x10000;
+    ci1s.io_width = 0x10000;
+    ci1s.sector_size = 0x1000; // FIXME - get from superblock
+    ci1s.num_stripes = 1;
+    ci1s.sub_stripes = 1;
+    ci1s.stripe[0].devid = 1;
+    ci1s.stripe[0].offset = c.disk_start;
+    ci1s.stripe[0].dev_uuid = dev_uuid;
 
     add_item(chunk_root, 0x100, btrfs_key_type::CHUNK_ITEM, c.offset, &ci1s, sizeof(ci1s));
 
@@ -967,7 +967,7 @@ static void write_superblocks(ntfs& dev, root& chunk_root, root& root_root, enum
     sys_chunk_size = 0;
     for (const auto& c : chunk_root.items) {
         if (c.first.type == btrfs_key_type::CHUNK_ITEM) {
-            auto& ci = *(CHUNK_ITEM*)c.second.data();
+            auto& ci = *(btrfs_chunk*)c.second.data();
 
             if (ci.type & BLOCK_FLAG_SYSTEM) {
                 sys_chunk_size += sizeof(btrfs_key);
@@ -1027,7 +1027,7 @@ static void write_superblocks(ntfs& dev, root& chunk_root, root& root_root, enum
 
         for (const auto& c : chunk_root.items) {
             if (c.first.type == btrfs_key_type::CHUNK_ITEM) {
-                auto& ci = *(CHUNK_ITEM*)c.second.data();
+                auto& ci = *(btrfs_chunk*)c.second.data();
 
                 if (ci.type & BLOCK_FLAG_SYSTEM) {
                     auto& key = *(btrfs_key*)ptr;
