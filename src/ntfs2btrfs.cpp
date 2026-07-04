@@ -456,14 +456,14 @@ static void create_data_chunks(ntfs& dev, const buffer_t& bmpdata) {
 }
 
 static void add_item(root& r, uint64_t obj_id, btrfs_key_type obj_type, uint64_t offset, const buffer_t& buf) {
-    auto ret = r.items.emplace(KEY{obj_id, obj_type, offset}, buf);
+    auto ret = r.items.emplace(btrfs_key{obj_id, obj_type, offset}, buf);
 
     if (!ret.second)
         throw formatted_error("Could not insert entry ({:x}, {}, {:x}) into root items list.", obj_id, obj_type, offset);
 }
 
 static void add_item_move(root& r, uint64_t obj_id, btrfs_key_type obj_type, uint64_t offset, buffer_t& buf) {
-    auto ret = r.items.emplace(KEY{obj_id, obj_type, offset}, buffer_t{});
+    auto ret = r.items.emplace(btrfs_key{obj_id, obj_type, offset}, buffer_t{});
 
     if (!ret.second)
         throw formatted_error("Could not insert entry ({:x}, {}, {:x}) into root items list.", obj_id, obj_type, offset);
@@ -474,7 +474,7 @@ static void add_item_move(root& r, uint64_t obj_id, btrfs_key_type obj_type, uin
 }
 
 static void add_item(root& r, uint64_t obj_id, btrfs_key_type obj_type, uint64_t offset, const void* data, uint16_t len) {
-    auto ret = r.items.emplace(KEY{obj_id, obj_type, offset}, buffer_t(len));
+    auto ret = r.items.emplace(btrfs_key{obj_id, obj_type, offset}, buffer_t(len));
 
     if (!ret.second)
         throw formatted_error("Could not insert entry ({:x}, {}, {:x}) into root items list.", obj_id, obj_type, offset);
@@ -724,11 +724,11 @@ void root::create_trees(root& extent_root, enum btrfs_csum_type csum_type) {
             addr = old_addresses.front().first;
 
             if (level != old_addresses.front().second) { // change metadata level in extent tree
-                if (auto f = extent_root.items.find(KEY{addr, btrfs_key_type::METADATA_ITEM, old_addresses.front().second}); f != extent_root.items.end()) {
+                if (auto f = extent_root.items.find(btrfs_key{addr, btrfs_key_type::METADATA_ITEM, old_addresses.front().second}); f != extent_root.items.end()) {
                     auto d = move(f->second);
 
                     extent_root.items.erase(f);
-                    extent_root.items.emplace(make_pair(KEY{addr, btrfs_key_type::METADATA_ITEM, level}, d));
+                    extent_root.items.emplace(make_pair(btrfs_key{addr, btrfs_key_type::METADATA_ITEM, level}, d));
                 }
             }
 
@@ -966,11 +966,11 @@ static void write_superblocks(ntfs& dev, root& chunk_root, root& root_root, enum
 
     sys_chunk_size = 0;
     for (const auto& c : chunk_root.items) {
-        if (c.first.obj_type == btrfs_key_type::CHUNK_ITEM) {
+        if (c.first.type == btrfs_key_type::CHUNK_ITEM) {
             auto& ci = *(CHUNK_ITEM*)c.second.data();
 
             if (ci.type & BLOCK_FLAG_SYSTEM) {
-                sys_chunk_size += sizeof(KEY);
+                sys_chunk_size += sizeof(btrfs_key);
                 sys_chunk_size += (uint32_t)c.second.size();
             }
         }
@@ -1014,7 +1014,7 @@ static void write_superblocks(ntfs& dev, root& chunk_root, root& root_root, enum
     set_volume_label(sb, dev);
 
     for (const auto& c : chunk_root.items) {
-        if (c.first.obj_type == btrfs_key_type::DEV_ITEM) {
+        if (c.first.type == btrfs_key_type::DEV_ITEM) {
             memcpy(&sb.dev_item, c.second.data(), sizeof(DEV_ITEM));
             break;
         }
@@ -1026,15 +1026,15 @@ static void write_superblocks(ntfs& dev, root& chunk_root, root& root_root, enum
         uint8_t* ptr = sb.sys_chunk_array;
 
         for (const auto& c : chunk_root.items) {
-            if (c.first.obj_type == btrfs_key_type::CHUNK_ITEM) {
+            if (c.first.type == btrfs_key_type::CHUNK_ITEM) {
                 auto& ci = *(CHUNK_ITEM*)c.second.data();
 
                 if (ci.type & BLOCK_FLAG_SYSTEM) {
-                    auto& key = *(KEY*)ptr;
+                    auto& key = *(btrfs_key*)ptr;
 
                     key = c.first;
 
-                    ptr += sizeof(KEY);
+                    ptr += sizeof(btrfs_key);
 
                     memcpy(ptr, c.second.data(), c.second.size());
 
@@ -1130,11 +1130,11 @@ static void update_root_root(root& root_root, enum btrfs_csum_type csum_type) {
         bool changed = true;
 
         for (unsigned int i = 0; i < th.num_items; i++) {
-            if (ln[i].key.obj_type == btrfs_key_type::ROOT_ITEM) {
+            if (ln[i].key.type == btrfs_key_type::ROOT_ITEM) {
                 auto& ri = *(ROOT_ITEM*)((uint8_t*)t.data() + sizeof(tree_header) + ln[i].offset);
 
                 for (const auto& r : roots) {
-                    if (r.id == ln[i].key.obj_id) {
+                    if (r.id == ln[i].key.objectid) {
                         ri.block_number = r.tree_addr;
                         ri.root_level = r.level;
                         ri.bytes_used = r.metadata_size;
@@ -1180,11 +1180,11 @@ static void update_extent_root(root& extent_root, enum btrfs_csum_type csum_type
         bool changed = true;
 
         for (unsigned int i = 0; i < th.num_items; i++) {
-            if (ln[i].key.obj_type == btrfs_key_type::BLOCK_GROUP_ITEM) {
+            if (ln[i].key.type == btrfs_key_type::BLOCK_GROUP_ITEM) {
                 auto& bgi = *(BLOCK_GROUP_ITEM*)((uint8_t*)t.data() + sizeof(tree_header) + ln[i].offset);
 
                 for (const auto& c : chunks) {
-                    if (c.offset == ln[i].key.obj_id) {
+                    if (c.offset == ln[i].key.objectid) {
                         bgi.used = c.used;
 
                         changed = true;
@@ -1199,8 +1199,8 @@ static void update_extent_root(root& extent_root, enum btrfs_csum_type csum_type
 }
 
 static void add_inode_ref(root& r, uint64_t inode, uint64_t parent, uint64_t index, string_view name) {
-    if (r.items.count(KEY{inode, btrfs_key_type::INODE_REF, parent}) != 0) { // collision, append to the end
-        auto& old = r.items.at(KEY{inode, btrfs_key_type::INODE_REF, parent});
+    if (r.items.count(btrfs_key{inode, btrfs_key_type::INODE_REF, parent}) != 0) { // collision, append to the end
+        auto& old = r.items.at(btrfs_key{inode, btrfs_key_type::INODE_REF, parent});
 
         size_t irlen = offsetof(INODE_REF, name[0]) + name.length();
 
@@ -1253,7 +1253,7 @@ static void update_chunk_root(root& chunk_root, enum btrfs_csum_type csum_type) 
         auto ln = (leaf_node*)((uint8_t*)t.data() + sizeof(tree_header));
 
         for (unsigned int i = 0; i < th.num_items; i++) {
-            if (ln[i].key.obj_id == 1 && ln[i].key.obj_type == btrfs_key_type::DEV_ITEM && ln[i].key.offset == 1) {
+            if (ln[i].key.objectid == 1 && ln[i].key.type == btrfs_key_type::DEV_ITEM && ln[i].key.offset == 1) {
                 auto& di = *(DEV_ITEM*)((uint8_t*)t.data() + sizeof(tree_header) + ln[i].offset);
 
                 di.bytes_used = 0;
@@ -1304,8 +1304,8 @@ static root& add_image_subvol(root& root_root, root& fstree_root) {
         buffer_t buf(offsetof(DIR_ITEM, name[0]) + sizeof(subvol_name) - 1);
         auto& di = *(DIR_ITEM*)buf.data();
 
-        di.key.obj_id = image_subvol_id;
-        di.key.obj_type = btrfs_key_type::ROOT_ITEM;
+        di.key.objectid = image_subvol_id;
+        di.key.type = btrfs_key_type::ROOT_ITEM;
         di.key.offset = 0xffffffffffffffff;
         di.transid = 1;
         di.m = 0;
@@ -1369,8 +1369,8 @@ static void create_image(root& r, ntfs& dev, const runs_t& runs, uint64_t inode,
         buffer_t buf(offsetof(DIR_ITEM, name[0]) + sizeof(image_filename) - 1);
         auto& di = *(DIR_ITEM*)buf.data();
 
-        di.key.obj_id = inode;
-        di.key.obj_type = btrfs_key_type::INODE_ITEM;
+        di.key.objectid = inode;
+        di.key.type = btrfs_key_type::INODE_ITEM;
         di.key.offset = 0;
         di.transid = 1;
         di.m = 0;
@@ -1391,7 +1391,7 @@ static void create_image(root& r, ntfs& dev, const runs_t& runs, uint64_t inode,
     // increase st_size in parent dir
 
     for (auto& it : r.items) {
-        if (it.first.obj_id == SUBVOL_ROOT_INODE && it.first.obj_type == btrfs_key_type::INODE_ITEM) {
+        if (it.first.objectid == SUBVOL_ROOT_INODE && it.first.type == btrfs_key_type::INODE_ITEM) {
             auto& ii2 = *(INODE_ITEM*)it.second.data();
 
             ii2.st_size += (sizeof(image_filename) - 1) * 2;
@@ -1689,8 +1689,8 @@ static void link_inode(root& r, uint64_t inode, uint64_t dir, string_view name,
 
         auto& di = *(DIR_ITEM*)buf.data();
 
-        di.key.obj_id = inode;
-        di.key.obj_type = btrfs_key_type::INODE_ITEM;
+        di.key.objectid = inode;
+        di.key.type = btrfs_key_type::INODE_ITEM;
         di.key.offset = 0;
         di.transid = 1;
         di.m = 0;
@@ -1700,10 +1700,10 @@ static void link_inode(root& r, uint64_t inode, uint64_t dir, string_view name,
 
         auto hash = calc_crc32c(0xfffffffe, (const uint8_t*)name.data(), (uint32_t)name.length());
 
-        if (r.items.count(KEY{dir, btrfs_key_type::DIR_ITEM, hash}) == 0)
+        if (r.items.count(btrfs_key{dir, btrfs_key_type::DIR_ITEM, hash}) == 0)
             add_item(r, dir, btrfs_key_type::DIR_ITEM, hash, buf);
         else { // hash collision
-            auto& ent = r.items.at(KEY{dir, btrfs_key_type::DIR_ITEM, hash});
+            auto& ent = r.items.at(btrfs_key{dir, btrfs_key_type::DIR_ITEM, hash});
 
             if (!ent.empty()) {
                 ent.resize(ent.size() + buf.size());
@@ -1977,8 +1977,8 @@ static void set_xattr(root& r, uint64_t inode, string_view name, uint32_t hash, 
     buffer_t buf(offsetof(DIR_ITEM, name[0]) + name.size() + data.size());
     auto& di = *(DIR_ITEM*)buf.data();
 
-    di.key.obj_id = di.key.offset = 0;
-    di.key.obj_type = (btrfs_key_type)0;
+    di.key.objectid = di.key.offset = 0;
+    di.key.type = (btrfs_key_type)0;
     di.transid = 1;
     di.m = (uint16_t)data.size();
     di.n = (uint16_t)name.size();
@@ -3685,8 +3685,8 @@ static void populate_root_root(root& root_root) {
     buffer_t buf(offsetof(DIR_ITEM, name[0]) + sizeof(default_subvol) - 1);
     auto& di = *(DIR_ITEM*)buf.data();
 
-    di.key.obj_id = BTRFS_ROOT_FSTREE;
-    di.key.obj_type = btrfs_key_type::ROOT_ITEM;
+    di.key.objectid = BTRFS_ROOT_FSTREE;
+    di.key.type = btrfs_key_type::ROOT_ITEM;
     di.key.offset = 0xffffffffffffffff;
     di.transid = 0;
     di.m = 0;
@@ -3704,12 +3704,12 @@ static void add_subvol_uuid(root& r) {
 
 static void update_dir_sizes(root& r) {
     for (auto& it : r.items) {
-        if (it.first.obj_type == btrfs_key_type::INODE_ITEM && r.dir_size.count(it.first.obj_id) != 0) {
+        if (it.first.type == btrfs_key_type::INODE_ITEM && r.dir_size.count(it.first.objectid) != 0) {
             auto& ii = *(INODE_ITEM*)it.second.data();
 
             // FIXME - would it speed things up if we removed the entry from dir_size map here?
 
-            ii.st_size = r.dir_size.at(it.first.obj_id);
+            ii.st_size = r.dir_size.at(it.first.objectid);
         }
     }
 }

@@ -141,11 +141,11 @@ typedef struct {
     uint8_t uuid[16];
 } BTRFS_UUID;
 
-typedef struct {
-    uint64_t obj_id;
-    btrfs_key_type obj_type;
+struct btrfs_key {
+    uint64_t objectid;
+    btrfs_key_type type;
     uint64_t offset;
-} KEY;
+} __attribute__((packed));
 
 #define HEADER_FLAG_WRITTEN         0x000000000000001
 #define HEADER_FLAG_SHARED_BACKREF  0x000000000000002
@@ -164,13 +164,13 @@ typedef struct {
 } tree_header;
 
 typedef struct {
-    KEY key;
+    btrfs_key key;
     uint32_t offset;
     uint32_t size;
 } leaf_node;
 
 typedef struct {
-    KEY key;
+    btrfs_key key;
     uint64_t address;
     uint64_t generation;
 } internal_node;
@@ -272,7 +272,7 @@ enum class btrfs_dir_item_type : uint8_t {
 };
 
 typedef struct {
-    KEY key;
+    btrfs_key key;
     uint64_t transid;
     uint16_t m;
     uint16_t n;
@@ -315,7 +315,7 @@ typedef struct {
     uint64_t last_snapshot_generation;
     uint64_t flags;
     uint32_t num_references;
-    KEY drop_progress;
+    btrfs_key drop_progress;
     uint8_t drop_level;
     uint8_t root_level;
     uint64_t generation2;
@@ -392,7 +392,7 @@ typedef struct {
 } EXTENT_ITEM;
 
 typedef struct {
-    KEY firstitem;
+    btrfs_key firstitem;
     uint8_t level;
 } EXTENT_ITEM2;
 
@@ -402,7 +402,7 @@ typedef struct {
 
 typedef struct {
     EXTENT_ITEM extent_item;
-    KEY firstitem;
+    btrfs_key firstitem;
     uint8_t level;
 } EXTENT_ITEM_TREE;
 
@@ -449,7 +449,7 @@ typedef struct {
 } FREE_SPACE_ENTRY;
 
 typedef struct {
-    KEY key;
+    btrfs_key key;
     uint64_t generation;
     uint64_t num_entries;
     uint64_t num_bitmaps;

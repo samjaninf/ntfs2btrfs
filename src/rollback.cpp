@@ -35,7 +35,7 @@ class btrfs {
 public:
     btrfs(const string& fn);
     uint64_t find_root_addr(uint64_t root);
-    bool walk_tree(uint64_t addr, const function<bool(const KEY&, string_view)>& func);
+    bool walk_tree(uint64_t addr, const function<bool(const btrfs_key&, string_view)>& func);
     const pair<const uint64_t, buffer_t>& find_chunk(uint64_t addr);
     buffer_t raw_read(uint64_t phys_addr, uint32_t len);
     void raw_write(uint64_t phys_addr, const buffer_t& buf);
@@ -259,7 +259,7 @@ buffer_t btrfs::read(uint64_t addr, uint32_t len) {
     return raw_read(addr - cp.first + cis[0].offset, len);
 }
 
-bool btrfs::walk_tree(uint64_t addr, const function<bool(const KEY&, string_view)>& func) {
+bool btrfs::walk_tree(uint64_t addr, const function<bool(const btrfs_key&, string_view)>& func) {
     auto tree = read(addr, sb.node_size);
 
     // FIXME - check checksum
@@ -302,16 +302,16 @@ void btrfs::read_chunks() {
     auto ptr = (uint8_t*)&sb.sys_chunk_array;
 
     do {
-        auto& key = *(KEY*)ptr;
+        auto& key = *(btrfs_key*)ptr;
 
-        if (key.obj_type != btrfs_key_type::CHUNK_ITEM)
+        if (key.type != btrfs_key_type::CHUNK_ITEM)
             break;
 
         auto& ci = *(CHUNK_ITEM*)(ptr + sizeof(key));
 
         basic_string_view<uint8_t> chunk_item{ptr + sizeof(key), sizeof(ci) + (ci.num_stripes * sizeof(CHUNK_ITEM_STRIPE))};
 
-        chunks.emplace(key.offset, buffer_t{chunk_item.data(), chunk_item.data() + chunk_item.size()});
+        chunks.emplace(+key.offset, buffer_t{chunk_item.data(), chunk_item.data() + chunk_item.size()});
 
         ptr += sizeof(key) + chunk_item.size();
     } while (ptr < &sb.sys_chunk_array[SYS_CHUNK_ARRAY_SIZE]);
@@ -335,8 +335,8 @@ void btrfs::read_chunks() {
 
     chunks_t chunks2;
 
-    walk_tree(sb.chunk_tree_addr, [&](const KEY& key, string_view data) {
-        if (key.obj_type != btrfs_key_type::CHUNK_ITEM)
+    walk_tree(sb.chunk_tree_addr, [&](const btrfs_key& key, string_view data) {
+        if (key.type != btrfs_key_type::CHUNK_ITEM)
             return true;
 
         chunks2.emplace(key.offset, buffer_t{data.data(), data.data() + data.size()});
@@ -350,8 +350,8 @@ void btrfs::read_chunks() {
 uint64_t btrfs::find_root_addr(uint64_t root) {
     optional<uint64_t> ret;
 
-    walk_tree(sb.root_tree_addr, [&](const KEY& key, string_view data) {
-        if (key.obj_id != root || key.obj_type != btrfs_key_type::ROOT_ITEM)
+    walk_tree(sb.root_tree_addr, [&](const btrfs_key& key, string_view data) {
+        if (key.objectid != root || key.type != btrfs_key_type::ROOT_ITEM)
             return true;
 
         const auto& ri = *(ROOT_ITEM*)data.data();
@@ -377,21 +377,21 @@ void rollback(const string& fn) {
     uint64_t inode = 0;
     uint32_t hash = calc_crc32c(0xfffffffe, (const uint8_t*)image_filename, sizeof(image_filename) - 1);
 
-    b.walk_tree(img_root_addr, [&](const KEY& key, string_view data) {
-        if (key.obj_id > SUBVOL_ROOT_INODE || (key.obj_id == SUBVOL_ROOT_INODE && key.obj_type > btrfs_key_type::DIR_ITEM))
+    b.walk_tree(img_root_addr, [&](const btrfs_key& key, string_view data) {
+        if (key.objectid > SUBVOL_ROOT_INODE || (key.objectid == SUBVOL_ROOT_INODE && key.type > btrfs_key_type::DIR_ITEM))
             return false;
 
-        if (key.obj_id == SUBVOL_ROOT_INODE && key.obj_type == btrfs_key_type::DIR_ITEM && key.offset == hash) {
+        if (key.objectid == SUBVOL_ROOT_INODE && key.type == btrfs_key_type::DIR_ITEM && key.offset == hash) {
             auto& di = *(DIR_ITEM*)data.data();
 
             // FIXME - handle hash collisions
 
             if (di.n == sizeof(image_filename) - 1 && !memcmp(di.name, image_filename, di.n)) {
-                if (di.key.obj_type != btrfs_key_type::INODE_ITEM)
+                if (di.key.type != btrfs_key_type::INODE_ITEM)
                     throw formatted_error("DIR_ITEM for {} pointed to object type {}, expected INODE_ITEM.",
-                                          string_view(di.name, di.n), di.key.obj_type);
+                                          string_view(di.name, di.n), di.key.type);
 
-                inode = di.key.obj_id;
+                inode = di.key.objectid;
             }
 
             return false;
@@ -407,11 +407,11 @@ void rollback(const string& fn) {
 
     map<uint64_t, pair<uint64_t, uint64_t>> extents;
 
-    b.walk_tree(img_root_addr, [&](const KEY& key, string_view data) {
-        if (key.obj_id > inode || (key.obj_id == inode && key.obj_type > btrfs_key_type::EXTENT_DATA))
+    b.walk_tree(img_root_addr, [&](const btrfs_key& key, string_view data) {
+        if (key.objectid > inode || (key.objectid == inode && key.type > btrfs_key_type::EXTENT_DATA))
             return false;
 
-        if (key.obj_id != inode || key.obj_type != btrfs_key_type::EXTENT_DATA)
+        if (key.objectid != inode || key.type != btrfs_key_type::EXTENT_DATA)
             return true;
 
         const auto& ed = *(EXTENT_DATA*)data.data();

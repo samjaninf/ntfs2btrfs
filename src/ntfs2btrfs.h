@@ -173,15 +173,15 @@ public:
 
 using buffer_t = std::vector<uint8_t, default_init_allocator<uint8_t>>;
 
-static bool inline operator<(const KEY& a, const KEY& b) {
-    if (a.obj_id < b.obj_id)
+static bool inline operator<(const btrfs_key& a, const btrfs_key& b) {
+    if (a.objectid < b.objectid)
         return true;
-    else if (a.obj_id > b.obj_id)
+    else if (a.objectid > b.objectid)
         return false;
 
-    if (a.obj_type < b.obj_type)
+    if (a.type < b.type)
         return true;
-    else if (a.obj_type > b.obj_type)
+    else if (a.type > b.type)
         return false;
 
     if (a.offset < b.offset)
@@ -200,7 +200,7 @@ public:
     void write_trees(ntfs& dev);
 
     uint64_t id;
-    std::map<KEY, buffer_t> items;
+    std::map<btrfs_key, buffer_t> items;
     std::list<buffer_t> trees;
     uint64_t tree_addr;
     uint8_t level;
