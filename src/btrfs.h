@@ -283,10 +283,10 @@ struct btrfs_dir_item {
     btrfs_dir_item_type type;
 } __attribute__ ((__packed__));
 
-typedef struct {
-    uint64_t seconds;
-    uint32_t nanoseconds;
-} BTRFS_TIME;
+struct btrfs_timespec {
+    le64 sec;
+    le32 nsec;
+} __attribute__((packed));
 
 typedef struct {
     uint64_t generation;
@@ -302,10 +302,10 @@ typedef struct {
     uint64_t flags;
     uint64_t sequence;
     uint8_t reserved[32];
-    BTRFS_TIME st_atime;
-    BTRFS_TIME st_ctime;
-    BTRFS_TIME st_mtime;
-    BTRFS_TIME otime;
+    btrfs_timespec st_atime;
+    btrfs_timespec st_ctime;
+    btrfs_timespec st_mtime;
+    btrfs_timespec otime;
 } INODE_ITEM;
 
 typedef struct {
@@ -329,10 +329,10 @@ typedef struct {
     uint64_t otransid;
     uint64_t stransid;
     uint64_t rtransid;
-    BTRFS_TIME ctime;
-    BTRFS_TIME otime;
-    BTRFS_TIME stime;
-    BTRFS_TIME rtime;
+    btrfs_timespec ctime;
+    btrfs_timespec otime;
+    btrfs_timespec stime;
+    btrfs_timespec rtime;
     uint64_t reserved[8];
 } ROOT_ITEM;
 

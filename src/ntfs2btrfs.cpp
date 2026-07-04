@@ -1350,10 +1350,10 @@ static void create_image(root& r, ntfs& dev, const runs_t& runs, uint64_t inode,
         ii.flags = BTRFS_INODE_NODATACOW | BTRFS_INODE_NODATASUM;
 
     // FIXME - use current time for the following
-//     BTRFS_TIME st_atime;
-//     BTRFS_TIME st_ctime;
-//     BTRFS_TIME st_mtime;
-//     BTRFS_TIME otime;
+//     btrfs_timespec st_atime;
+//     btrfs_timespec st_ctime;
+//     btrfs_timespec st_mtime;
+//     btrfs_timespec otime;
 
     for (const auto& rs : runs) {
         for (const auto& run : rs.second) {
@@ -1665,12 +1665,12 @@ static void parse_data_bitmap(ntfs& dev, const buffer_t& bmpdata, runs_t& runs) 
     // FIXME - remove any bits after end of volume
 }
 
-static BTRFS_TIME win_time_to_unix(int64_t time) {
+static btrfs_timespec win_time_to_unix(int64_t time) {
     uint64_t l = (uint64_t)time - 116444736000000000ULL;
-    BTRFS_TIME bt;
+    btrfs_timespec bt;
 
-    bt.seconds = l / 10000000;
-    bt.nanoseconds = (uint32_t)((l % 10000000) * 100);
+    bt.sec = l / 10000000;
+    bt.nsec = (uint32_t)((l % 10000000) * 100);
 
     return bt;
 }
@@ -2604,12 +2604,12 @@ static void add_inode(root& r, uint64_t inode, uint64_t ntfs_inode, bool& is_dir
             ii.st_uid = l.uid;
             ii.st_gid = l.gid;
             ii.st_rdev = l.rdev;
-            ii.st_atime.seconds = l.atime;
-            ii.st_atime.nanoseconds = l.atime_ns;
-            ii.st_mtime.seconds = l.mtime;
-            ii.st_mtime.nanoseconds = l.mtime_ns;
-            ii.st_ctime.seconds = l.ctime;
-            ii.st_ctime.nanoseconds = l.ctime_ns;
+            ii.st_atime.sec = l.atime;
+            ii.st_atime.nsec = l.atime_ns;
+            ii.st_mtime.sec = l.mtime;
+            ii.st_mtime.nsec = l.mtime_ns;
+            ii.st_ctime.sec = l.ctime;
+            ii.st_ctime.nsec = l.ctime_ns;
 
             has_lxattrb = true;
         } else if (n == "LX.SECURITY.CAPABILITY") {
