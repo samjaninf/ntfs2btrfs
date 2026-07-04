@@ -251,7 +251,7 @@ buffer_t btrfs::read(uint64_t addr, uint32_t len) {
     if (c.num_stripes == 0)
         throw runtime_error("btrfs_chunk had num_stripes == 0");
 
-    if (c.stripe[0].devid != sb.dev_item.dev_id)
+    if (c.stripe[0].devid != sb.dev_item.devid)
         throw runtime_error("Reading from other device not implemented.");
 
     return raw_read(addr - cp.first + c.stripe[0].offset, len);

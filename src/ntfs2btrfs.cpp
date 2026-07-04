@@ -1016,7 +1016,7 @@ static void write_superblocks(ntfs& dev, root& chunk_root, root& root_root,
 
     for (const auto& c : chunk_root.items) {
         if (c.first.type == btrfs_key_type::DEV_ITEM) {
-            memcpy(&sb.dev_item, c.second.data(), sizeof(DEV_ITEM));
+            memcpy(&sb.dev_item, c.second.data(), sizeof(btrfs_dev_item));
             break;
         }
     }
@@ -1080,20 +1080,20 @@ static void write_superblocks(ntfs& dev, root& chunk_root, root& root_root,
 }
 
 static void add_dev_item(root& chunk_root) {
-    DEV_ITEM di;
+    btrfs_dev_item di;
     uint32_t sector_size = 0x1000; // FIXME - get from superblock
 
-    memset(&di, 0, sizeof(DEV_ITEM));
-    di.dev_id = 1;
-    di.num_bytes = device_size;
+    memset(&di, 0, sizeof(btrfs_dev_item));
+    di.devid = 1;
+    di.total_bytes = device_size;
     //uint64_t bytes_used; // FIXME
-    di.optimal_io_align = sector_size;
-    di.optimal_io_width = sector_size;
-    di.minimal_io_size = sector_size;
-    di.device_uuid = dev_uuid;
-    di.fs_uuid = fs_uuid;
+    di.io_align = sector_size;
+    di.io_width = sector_size;
+    di.sector_size = sector_size;
+    di.uuid = dev_uuid;
+    di.fsid = fs_uuid;
 
-    add_item(chunk_root, 1, btrfs_key_type::DEV_ITEM, 1, &di, sizeof(DEV_ITEM));
+    add_item(chunk_root, 1, btrfs_key_type::DEV_ITEM, 1, &di, sizeof(btrfs_dev_item));
 }
 
 static void add_to_root_root(const root& r, root& root_root) {
@@ -1255,7 +1255,7 @@ static void update_chunk_root(root& chunk_root, enum btrfs_csum_type csum_type) 
 
         for (unsigned int i = 0; i < th.nritems; i++) {
             if (ln[i].key.objectid == 1 && ln[i].key.type == btrfs_key_type::DEV_ITEM && ln[i].key.offset == 1) {
-                auto& di = *(DEV_ITEM*)((uint8_t*)t.data() + sizeof(btrfs_header) + ln[i].offset);
+                auto& di = *(btrfs_dev_item*)((uint8_t*)t.data() + sizeof(btrfs_header) + ln[i].offset);
 
                 di.bytes_used = 0;
 
@@ -1266,7 +1266,7 @@ static void update_chunk_root(root& chunk_root, enum btrfs_csum_type csum_type) 
                 calc_tree_hash(th, csum_type);
 
                 auto& it = chunk_root.items.at(ln[i].key);
-                auto& di2 = *(DEV_ITEM*)it.data();
+                auto& di2 = *(btrfs_dev_item*)it.data();
 
                 di2.bytes_used = di.bytes_used;
 
