@@ -141,17 +141,17 @@ struct btrfs_key {
 #define HEADER_FLAG_SHARED_BACKREF  0x000000000000002
 #define HEADER_FLAG_MIXED_BACKREF   0x100000000000000
 
-typedef struct {
+struct btrfs_header {
     uint8_t csum[32];
-    btrfs_uuid fs_uuid;
-    uint64_t address;
-    uint64_t flags;
+    btrfs_uuid fsid;
+    le64 bytenr;
+    le64 flags;
     btrfs_uuid chunk_tree_uuid;
-    uint64_t generation;
-    uint64_t tree_id;
-    uint32_t num_items;
+    le64 generation;
+    le64 owner;
+    le32 nritems;
     uint8_t level;
-} tree_header;
+} __attribute__((packed));
 
 typedef struct {
     btrfs_key key;

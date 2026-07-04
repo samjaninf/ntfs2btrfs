@@ -262,13 +262,13 @@ bool btrfs::walk_tree(uint64_t addr, const function<bool(const btrfs_key&, strin
 
     // FIXME - check checksum
 
-    auto& th = *(tree_header*)tree.data();
+    auto& th = *(btrfs_header*)tree.data();
 
     // if root is not 0, recurse
     if (th.level != 0) {
         auto nodes = (internal_node*)(&th + 1);
 
-        for (unsigned int i = 0; i < th.num_items; i++) {
+        for (unsigned int i = 0; i < th.nritems; i++) {
             auto ret = walk_tree(nodes[i].address, func);
 
             if (!ret)
@@ -280,14 +280,14 @@ bool btrfs::walk_tree(uint64_t addr, const function<bool(const btrfs_key&, strin
 
     auto nodes = (leaf_node*)(&th + 1);
 
-    for (unsigned int i = 0; i < th.num_items; i++) {
+    for (unsigned int i = 0; i < th.nritems; i++) {
         const auto& n = nodes[i];
         bool b;
 
         if (n.size == 0)
             b = func(n.key, {});
         else
-            b = func(n.key, { (char*)&th + sizeof(tree_header) + n.offset, n.size });
+            b = func(n.key, { (char*)&th + sizeof(btrfs_header) + n.offset, n.size });
 
         if (!b)
             return false;
