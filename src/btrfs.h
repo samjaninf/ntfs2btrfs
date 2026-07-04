@@ -367,11 +367,11 @@ struct btrfs_inode_ref {
 #define EXTENT_ITEM_TREE_BLOCK      0x002
 #define EXTENT_ITEM_SHARED_BACKREFS 0x100
 
-typedef struct {
-    uint64_t refcount;
-    uint64_t generation;
-    uint64_t flags;
-} EXTENT_ITEM;
+struct btrfs_extent_item {
+    le64 refs;
+    le64 generation;
+    le64 flags;
+} __attribute__ ((__packed__));
 
 typedef struct {
     uint64_t offset;

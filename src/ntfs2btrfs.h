@@ -278,19 +278,19 @@ public:
 #pragma pack(push,1)
 
 typedef struct {
-    EXTENT_ITEM extent_item;
+    btrfs_extent_item extent_item;
     btrfs_key_type type;
     TREE_BLOCK_REF tbr;
 } metadata_item;
 
 typedef struct {
-    EXTENT_ITEM extent_item;
+    btrfs_extent_item extent_item;
     btrfs_key_type type;
     EXTENT_DATA_REF edr;
 } data_item;
 
 typedef struct {
-    EXTENT_ITEM extent_item;
+    btrfs_extent_item extent_item;
     btrfs_key_type type1;
     EXTENT_DATA_REF edr1;
     btrfs_key_type type2;

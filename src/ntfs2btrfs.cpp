@@ -527,7 +527,7 @@ static uint64_t allocate_metadata(uint64_t r, root& extent_root, uint8_t level) 
     bool found = false;
     metadata_item mi;
 
-    mi.extent_item.refcount = 1;
+    mi.extent_item.refs = 1;
     mi.extent_item.generation = 1;
     mi.extent_item.flags = EXTENT_ITEM_TREE_BLOCK;
     mi.type = btrfs_key_type::TREE_BLOCK_REF;
@@ -3285,7 +3285,7 @@ static void create_data_extent_items(root& extent_root, const runs_t& runs, uint
             if (r.inode == 0) {
                 data_item di;
 
-                di.extent_item.refcount = 1;
+                di.extent_item.refs = 1;
                 di.extent_item.generation = 1;
                 di.extent_item.flags = EXTENT_ITEM_DATA;
                 di.type = btrfs_key_type::EXTENT_DATA_REF;
@@ -3299,7 +3299,7 @@ static void create_data_extent_items(root& extent_root, const runs_t& runs, uint
             } else if (r.not_in_img) {
                 data_item di;
 
-                di.extent_item.refcount = 1;
+                di.extent_item.refs = 1;
                 di.extent_item.generation = 1;
                 di.extent_item.flags = EXTENT_ITEM_DATA;
                 di.type = btrfs_key_type::EXTENT_DATA_REF;
@@ -3315,7 +3315,7 @@ static void create_data_extent_items(root& extent_root, const runs_t& runs, uint
                 EXTENT_DATA_REF* e1;
                 EXTENT_DATA_REF* e2;
 
-                di2.extent_item.refcount = 2;
+                di2.extent_item.refs = 2;
                 di2.extent_item.generation = 1;
                 di2.extent_item.flags = EXTENT_ITEM_DATA;
                 di2.type1 = btrfs_key_type::EXTENT_DATA_REF;
