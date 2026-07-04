@@ -286,15 +286,15 @@ typedef struct {
 typedef struct {
     btrfs_extent_item extent_item;
     btrfs_key_type type;
-    EXTENT_DATA_REF edr;
+    btrfs_extent_data_ref edr;
 } data_item;
 
 typedef struct {
     btrfs_extent_item extent_item;
     btrfs_key_type type1;
-    EXTENT_DATA_REF edr1;
+    btrfs_extent_data_ref edr1;
     btrfs_key_type type2;
-    EXTENT_DATA_REF edr2;
+    btrfs_extent_data_ref edr2;
 } data_item2;
 
 #pragma pack(pop)

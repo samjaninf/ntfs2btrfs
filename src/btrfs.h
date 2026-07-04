@@ -373,12 +373,12 @@ typedef struct {
     uint64_t offset;
 } TREE_BLOCK_REF;
 
-typedef struct {
-    uint64_t root;
-    uint64_t objid;
-    uint64_t offset;
-    uint32_t count;
-} EXTENT_DATA_REF;
+struct btrfs_extent_data_ref {
+    le64 root;
+    le64 objectid;
+    le64 offset;
+    le32 count;
+} __attribute__ ((__packed__));
 
 struct btrfs_block_group_item {
     le64 used;

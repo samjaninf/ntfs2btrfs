@@ -3287,7 +3287,7 @@ static void create_data_extent_items(root& extent_root, const runs_t& runs, uint
                 di.extent_item.flags = EXTENT_ITEM_DATA;
                 di.type = btrfs_key_type::EXTENT_DATA_REF;
                 di.edr.root = image_subvol_id;
-                di.edr.objid = image_inode;
+                di.edr.objectid = image_inode;
                 di.edr.count = 1;
                 di.edr.offset = img_addr;
 
@@ -3301,7 +3301,7 @@ static void create_data_extent_items(root& extent_root, const runs_t& runs, uint
                 di.extent_item.flags = EXTENT_ITEM_DATA;
                 di.type = btrfs_key_type::EXTENT_DATA_REF;
                 di.edr.root = BTRFS_ROOT_FSTREE;
-                di.edr.objid = r.inode;
+                di.edr.objectid = r.inode;
                 di.edr.count = 1;
                 di.edr.offset = r.file_offset * cluster_size;
 
@@ -3309,8 +3309,8 @@ static void create_data_extent_items(root& extent_root, const runs_t& runs, uint
                          &di, sizeof(data_item));
             } else {
                 data_item2 di2;
-                EXTENT_DATA_REF* e1;
-                EXTENT_DATA_REF* e2;
+                btrfs_extent_data_ref* e1;
+                btrfs_extent_data_ref* e2;
 
                 di2.extent_item.refs = 2;
                 di2.extent_item.generation = 1;
@@ -3330,11 +3330,11 @@ static void create_data_extent_items(root& extent_root, const runs_t& runs, uint
                 }
 
                 e1->root = image_subvol_id;
-                e1->objid = image_inode;
+                e1->objectid = image_inode;
                 e1->count = 1;
                 e1->offset = img_addr;
                 e2->root = BTRFS_ROOT_FSTREE;
-                e2->objid = r.inode;
+                e2->objectid = r.inode;
                 e2->count = 1;
                 e2->offset = r.file_offset * cluster_size;
 
