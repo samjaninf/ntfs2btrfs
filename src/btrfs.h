@@ -159,11 +159,11 @@ struct btrfs_item {
     le32 size;
 } __attribute__((packed));
 
-typedef struct {
+struct btrfs_key_ptr {
     btrfs_key key;
-    uint64_t address;
-    uint64_t generation;
-} internal_node;
+    le64 blockptr;
+    le64 generation;
+} __attribute__((packed));
 
 typedef struct {
     uint64_t dev_id;

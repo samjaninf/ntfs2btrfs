@@ -827,7 +827,7 @@ void root::create_trees(root& extent_root, enum btrfs_csum_type csum_type) {
         num_items = 0;
         space_left = tree_size - (uint32_t)sizeof(btrfs_header);
 
-        auto in = (internal_node*)((uint8_t*)buf.data() + sizeof(btrfs_header));
+        auto in = (btrfs_key_ptr*)((uint8_t*)buf.data() + sizeof(btrfs_header));
 
         for (const auto& t : trees) {
             auto th2 = (btrfs_header*)t.data();
@@ -838,7 +838,7 @@ void root::create_trees(root& extent_root, enum btrfs_csum_type csum_type) {
             if (th2->level < level - 1)
                 continue;
 
-            if (sizeof(internal_node) > space_left) { // tree complete, add to list
+            if (sizeof(btrfs_key_ptr) > space_left) { // tree complete, add to list
                 th.bytenr = get_address(extent_root, level);
                 th.nritems = num_items;
 
@@ -858,7 +858,7 @@ void root::create_trees(root& extent_root, enum btrfs_csum_type csum_type) {
 
                 space_left = tree_size - (uint32_t)sizeof(btrfs_header);
                 num_items = 0;
-                in = (internal_node*)((uint8_t*)buf.data() + sizeof(btrfs_header));
+                in = (btrfs_key_ptr*)((uint8_t*)buf.data() + sizeof(btrfs_header));
 
                 trees_added++;
             }
@@ -866,13 +866,13 @@ void root::create_trees(root& extent_root, enum btrfs_csum_type csum_type) {
             auto ln = (btrfs_item*)((uint8_t*)t.data() + sizeof(btrfs_header));
 
             in->key = ln->key;
-            in->address = th2->bytenr;
+            in->blockptr = th2->bytenr;
             in->generation = 1;
 
             in++;
 
             num_items++;
-            space_left -= (uint32_t)sizeof(internal_node);
+            space_left -= (uint32_t)sizeof(btrfs_key_ptr);
         }
 
         if (num_items > 0) { // flush remaining tree

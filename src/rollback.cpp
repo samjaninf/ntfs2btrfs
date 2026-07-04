@@ -266,10 +266,10 @@ bool btrfs::walk_tree(uint64_t addr, const function<bool(const btrfs_key&, strin
 
     // if root is not 0, recurse
     if (th.level != 0) {
-        auto nodes = (internal_node*)(&th + 1);
+        auto nodes = (btrfs_key_ptr*)(&th + 1);
 
         for (unsigned int i = 0; i < th.nritems; i++) {
-            auto ret = walk_tree(nodes[i].address, func);
+            auto ret = walk_tree(nodes[i].blockptr, func);
 
             if (!ret)
                 return false;
