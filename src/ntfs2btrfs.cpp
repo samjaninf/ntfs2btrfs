@@ -929,8 +929,8 @@ static void set_volume_label(superblock& sb, ntfs& dev) {
 
         auto vn = utf16_to_utf8(u16string_view((char16_t*)vnw.data(), vnw.size()));
 
-        if (vn.length() > MAX_LABEL_SIZE) {
-            vn = vn.substr(0, MAX_LABEL_SIZE);
+        if (vn.length() >= MAX_LABEL_SIZE) {
+            vn = vn.substr(0, MAX_LABEL_SIZE - 1);
 
             // remove whole code point
             while (!vn.empty() && vn[vn.length() - 1] & 0x80) {
@@ -946,6 +946,7 @@ static void set_volume_label(superblock& sb, ntfs& dev) {
             return;
 
         memcpy(sb.label, vn.data(), vn.length());
+        sb.label[vn.length()] = 0;
     } catch (const exception& e) { // shouldn't be fatal
         cerr << "Error while setting volume label: " << e.what() << endl;
     }
