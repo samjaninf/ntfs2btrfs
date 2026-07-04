@@ -1202,27 +1202,27 @@ static void add_inode_ref(root& r, uint64_t inode, uint64_t parent, uint64_t ind
     if (r.items.count(btrfs_key{inode, btrfs_key_type::INODE_REF, parent}) != 0) { // collision, append to the end
         auto& old = r.items.at(btrfs_key{inode, btrfs_key_type::INODE_REF, parent});
 
-        size_t irlen = offsetof(INODE_REF, name[0]) + name.length();
+        size_t irlen = sizeof(btrfs_inode_ref) + name.length();
 
         // FIXME - check if too long for tree, and create INODE_EXTREF instead
 
         old.resize(old.size() + irlen);
 
-        auto& ir = *(INODE_REF*)((uint8_t*)old.data() + old.size() - irlen);
+        auto& ir = *(btrfs_inode_ref*)((uint8_t*)old.data() + old.size() - irlen);
 
         ir.index = index;
-        ir.n = (uint16_t)name.length();
-        memcpy(ir.name, name.data(), name.length());
+        ir.name_len = (uint16_t)name.length();
+        memcpy(&ir + 1, name.data(), name.length());
 
         return;
     }
 
-    buffer_t buf(offsetof(INODE_REF, name[0]) + name.length());
-    auto& ir = *(INODE_REF*)buf.data();
+    buffer_t buf(sizeof(btrfs_inode_ref) + name.length());
+    auto& ir = *(btrfs_inode_ref*)buf.data();
 
     ir.index = index;
-    ir.n = (uint16_t)name.length();
-    memcpy(ir.name, name.data(), name.length());
+    ir.name_len = (uint16_t)name.length();
+    memcpy(&ir + 1, name.data(), name.length());
 
     add_item_move(r, inode, btrfs_key_type::INODE_REF, parent, buf);
 }

@@ -372,11 +372,10 @@ typedef struct {
     uint64_t num_bytes;
 } EXTENT_DATA2;
 
-typedef struct {
-    uint64_t index;
-    uint16_t n;
-    char name[1];
-} INODE_REF;
+struct btrfs_inode_ref {
+    le64 index;
+    le16 name_len;
+} __attribute__ ((__packed__));
 
 typedef struct {
     uint64_t dir;
