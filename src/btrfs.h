@@ -61,7 +61,6 @@ enum class btrfs_key_type : uint8_t {
 #define BTRFS_ROOT_TREEDIR      6
 #define BTRFS_ROOT_CHECKSUM     7
 #define BTRFS_ROOT_UUID         9
-#define BTRFS_ROOT_FREE_SPACE   0xa
 #define BTRFS_ROOT_DATA_RELOC   0xFFFFFFFFFFFFFFF7
 
 enum class btrfs_compression : uint8_t {
@@ -70,10 +69,6 @@ enum class btrfs_compression : uint8_t {
     lzo = 2,
     zstd = 3
 };
-
-#define BTRFS_ENCRYPTION_NONE   0
-
-#define BTRFS_ENCODING_NONE     0
 
 enum class btrfs_extent_type : uint8_t {
     inline_extent = 0,
@@ -93,9 +88,7 @@ enum class btrfs_extent_type : uint8_t {
 #define BLOCK_FLAG_RAID1C3      0x200
 #define BLOCK_FLAG_RAID1C4      0x400
 
-#define FREE_SPACE_CACHE_ID     0xFFFFFFFFFFFFFFF5
 #define EXTENT_CSUM_ID          0xFFFFFFFFFFFFFFF6
-#define BALANCE_ITEM_ID         0xFFFFFFFFFFFFFFFC
 
 #define BTRFS_INODE_NODATASUM   0x001
 #define BTRFS_INODE_NODATACOW   0x002
@@ -112,9 +105,6 @@ enum class btrfs_extent_type : uint8_t {
 
 #define BTRFS_SUBVOL_READONLY   0x1
 
-#define BTRFS_COMPAT_RO_FLAGS_FREE_SPACE_CACHE          0x1
-#define BTRFS_COMPAT_RO_FLAGS_FREE_SPACE_CACHE_VALID    0x2
-
 #define BTRFS_INCOMPAT_FLAGS_MIXED_BACKREF      0x0001
 #define BTRFS_INCOMPAT_FLAGS_DEFAULT_SUBVOL     0x0002
 #define BTRFS_INCOMPAT_FLAGS_MIXED_GROUPS       0x0004
@@ -127,10 +117,6 @@ enum class btrfs_extent_type : uint8_t {
 #define BTRFS_INCOMPAT_FLAGS_NO_HOLES           0x0200
 #define BTRFS_INCOMPAT_FLAGS_METADATA_UUID      0x0400
 #define BTRFS_INCOMPAT_FLAGS_RAID1C34           0x0800
-
-#define BTRFS_SUPERBLOCK_FLAGS_SEEDING   0x100000000
-
-#define BTRFS_ORPHAN_INODE_OBJID         0xFFFFFFFFFFFFFFFB
 
 enum class btrfs_csum_type : uint16_t {
     crc32c = 0,
@@ -388,21 +374,6 @@ typedef struct {
 } EXTENT_ITEM;
 
 typedef struct {
-    btrfs_key firstitem;
-    uint8_t level;
-} EXTENT_ITEM2;
-
-typedef struct {
-    uint32_t refcount;
-} EXTENT_ITEM_V0;
-
-typedef struct {
-    EXTENT_ITEM extent_item;
-    btrfs_key firstitem;
-    uint8_t level;
-} EXTENT_ITEM_TREE;
-
-typedef struct {
     uint64_t offset;
 } TREE_BLOCK_REF;
 
@@ -420,38 +391,6 @@ struct btrfs_block_group_item {
 } __attribute__ ((__packed__));
 
 typedef struct {
-    uint64_t root;
-    uint64_t gen;
-    uint64_t objid;
-    uint32_t count;
-} EXTENT_REF_V0;
-
-typedef struct {
-    uint64_t offset;
-} SHARED_BLOCK_REF;
-
-typedef struct {
-    uint64_t offset;
-    uint32_t count;
-} SHARED_DATA_REF;
-
-static const uint8_t FREE_SPACE_EXTENT = 1;
-static const uint8_t FREE_SPACE_BITMAP = 2;
-
-typedef struct {
-    uint64_t offset;
-    uint64_t size;
-    uint8_t type;
-} FREE_SPACE_ENTRY;
-
-typedef struct {
-    btrfs_key key;
-    uint64_t generation;
-    uint64_t num_entries;
-    uint64_t num_bitmaps;
-} FREE_SPACE_ITEM;
-
-typedef struct {
     uint64_t dir;
     uint64_t index;
     uint16_t n;
@@ -465,133 +404,5 @@ typedef struct {
     uint64_t length;
     btrfs_uuid chunktree_uuid;
 } DEV_EXTENT;
-
-#define BALANCE_FLAGS_DATA          0x1
-#define BALANCE_FLAGS_SYSTEM        0x2
-#define BALANCE_FLAGS_METADATA      0x4
-
-#define BALANCE_ARGS_FLAGS_PROFILES         0x001
-#define BALANCE_ARGS_FLAGS_USAGE            0x002
-#define BALANCE_ARGS_FLAGS_DEVID            0x004
-#define BALANCE_ARGS_FLAGS_DRANGE           0x008
-#define BALANCE_ARGS_FLAGS_VRANGE           0x010
-#define BALANCE_ARGS_FLAGS_LIMIT            0x020
-#define BALANCE_ARGS_FLAGS_LIMIT_RANGE      0x040
-#define BALANCE_ARGS_FLAGS_STRIPES_RANGE    0x080
-#define BALANCE_ARGS_FLAGS_CONVERT          0x100
-#define BALANCE_ARGS_FLAGS_SOFT             0x200
-#define BALANCE_ARGS_FLAGS_USAGE_RANGE      0x400
-
-typedef struct {
-    uint64_t profiles;
-
-    union {
-            uint64_t usage;
-            struct {
-                    uint32_t usage_start;
-                    uint32_t usage_end;
-            } s;
-    } u1;
-
-    uint64_t devid;
-    uint64_t drange_start;
-    uint64_t drange_end;
-    uint64_t vrange_start;
-    uint64_t vrange_end;
-    uint64_t convert;
-    uint64_t flags;
-
-    union {
-            uint64_t limit;
-            struct {
-                    uint32_t limit_start;
-                    uint32_t limit_end;
-            } s;
-    } u2;
-
-    uint32_t stripes_start;
-    uint32_t stripes_end;
-    uint8_t reserved[48];
-} BALANCE_ARGS;
-
-typedef struct {
-    uint64_t flags;
-    BALANCE_ARGS data;
-    BALANCE_ARGS metadata;
-    BALANCE_ARGS system;
-    uint8_t reserved[32];
-} BALANCE_ITEM;
-
-#define BTRFS_DEV_STAT_WRITE_ERRORS          0
-#define BTRFS_DEV_STAT_READ_ERRORS           1
-#define BTRFS_DEV_STAT_FLUSH_ERRORS          2
-#define BTRFS_DEV_STAT_CORRUPTION_ERRORS     3
-#define BTRFS_DEV_STAT_GENERATION_ERRORS     4
-
-#define BTRFS_SEND_CMD_SUBVOL          1
-#define BTRFS_SEND_CMD_SNAPSHOT        2
-#define BTRFS_SEND_CMD_MKFILE          3
-#define BTRFS_SEND_CMD_MKDIR           4
-#define BTRFS_SEND_CMD_MKNOD           5
-#define BTRFS_SEND_CMD_MKFIFO          6
-#define BTRFS_SEND_CMD_MKSOCK          7
-#define BTRFS_SEND_CMD_SYMLINK         8
-#define BTRFS_SEND_CMD_RENAME          9
-#define BTRFS_SEND_CMD_LINK           10
-#define BTRFS_SEND_CMD_UNLINK         11
-#define BTRFS_SEND_CMD_RMDIR          12
-#define BTRFS_SEND_CMD_SET_XATTR      13
-#define BTRFS_SEND_CMD_REMOVE_XATTR   14
-#define BTRFS_SEND_CMD_WRITE          15
-#define BTRFS_SEND_CMD_CLONE          16
-#define BTRFS_SEND_CMD_TRUNCATE       17
-#define BTRFS_SEND_CMD_CHMOD          18
-#define BTRFS_SEND_CMD_CHOWN          19
-#define BTRFS_SEND_CMD_UTIMES         20
-#define BTRFS_SEND_CMD_END            21
-#define BTRFS_SEND_CMD_UPDATE_EXTENT  22
-
-#define BTRFS_SEND_TLV_UUID             1
-#define BTRFS_SEND_TLV_TRANSID          2
-#define BTRFS_SEND_TLV_INODE            3
-#define BTRFS_SEND_TLV_SIZE             4
-#define BTRFS_SEND_TLV_MODE             5
-#define BTRFS_SEND_TLV_UID              6
-#define BTRFS_SEND_TLV_GID              7
-#define BTRFS_SEND_TLV_RDEV             8
-#define BTRFS_SEND_TLV_CTIME            9
-#define BTRFS_SEND_TLV_MTIME           10
-#define BTRFS_SEND_TLV_ATIME           11
-#define BTRFS_SEND_TLV_OTIME           12
-#define BTRFS_SEND_TLV_XATTR_NAME      13
-#define BTRFS_SEND_TLV_XATTR_DATA      14
-#define BTRFS_SEND_TLV_PATH            15
-#define BTRFS_SEND_TLV_PATH_TO         16
-#define BTRFS_SEND_TLV_PATH_LINK       17
-#define BTRFS_SEND_TLV_OFFSET          18
-#define BTRFS_SEND_TLV_DATA            19
-#define BTRFS_SEND_TLV_CLONE_UUID      20
-#define BTRFS_SEND_TLV_CLONE_CTRANSID  21
-#define BTRFS_SEND_TLV_CLONE_PATH      22
-#define BTRFS_SEND_TLV_CLONE_OFFSET    23
-#define BTRFS_SEND_TLV_CLONE_LENGTH    24
-
-#define BTRFS_SEND_MAGIC "btrfs-stream"
-
-typedef struct {
-    uint8_t magic[13];
-    uint32_t version;
-} btrfs_send_header;
-
-typedef struct {
-    uint32_t length;
-    uint16_t cmd;
-    uint32_t csum;
-} btrfs_send_command;
-
-typedef struct {
-    uint16_t type;
-    uint16_t length;
-} btrfs_send_tlv;
 
 #pragma pack(pop)
