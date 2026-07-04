@@ -56,7 +56,7 @@ static uint32_t tree_size = 0x4000; // FIXME
 static list<space> space_list;
 static bool chunks_changed;
 static uint64_t data_size = 0;
-static BTRFS_UUID fs_uuid, chunk_uuid, dev_uuid, subvol_uuid;
+static btrfs_uuid fs_uuid, chunk_uuid, dev_uuid, subvol_uuid;
 static list<relocation> relocs;
 static uint64_t device_size, orig_device_size;
 static bool reloc_last_sector = false;
@@ -1158,8 +1158,8 @@ static void add_dev_stats(root& r) {
     add_item(r, 0, btrfs_key_type::DEV_STATS, 1, &ds, sizeof(ds));
 }
 
-static BTRFS_UUID generate_uuid(default_random_engine& gen) {
-    BTRFS_UUID uuid;
+static btrfs_uuid generate_uuid(default_random_engine& gen) {
+    btrfs_uuid uuid;
     uniform_int_distribution<unsigned int> dist(0,0xffffffff);
 
     for (unsigned int i = 0; i < 4; i++) {

@@ -141,9 +141,9 @@ enum class btrfs_csum_type : uint16_t {
 
 #pragma pack(push, 1)
 
-typedef struct {
+struct btrfs_uuid {
     uint8_t uuid[16];
-} BTRFS_UUID;
+} __attribute__((packed));
 
 struct btrfs_key {
     uint64_t objectid;
@@ -157,10 +157,10 @@ struct btrfs_key {
 
 typedef struct {
     uint8_t csum[32];
-    BTRFS_UUID fs_uuid;
+    btrfs_uuid fs_uuid;
     uint64_t address;
     uint64_t flags;
-    BTRFS_UUID chunk_tree_uuid;
+    btrfs_uuid chunk_tree_uuid;
     uint64_t generation;
     uint64_t tree_id;
     uint32_t num_items;
@@ -192,8 +192,8 @@ typedef struct {
     uint32_t dev_group;
     uint8_t seek_speed;
     uint8_t bandwidth;
-    BTRFS_UUID device_uuid;
-    BTRFS_UUID fs_uuid;
+    btrfs_uuid device_uuid;
+    btrfs_uuid fs_uuid;
 } DEV_ITEM;
 
 #define SYS_CHUNK_ARRAY_SIZE 0x800
@@ -227,7 +227,7 @@ typedef struct {
 
 typedef struct {
     uint8_t checksum[32];
-    BTRFS_UUID uuid;
+    btrfs_uuid uuid;
     uint64_t sb_phys_addr;
     uint64_t flags;
     uint64_t magic;
@@ -322,9 +322,9 @@ typedef struct {
     uint8_t drop_level;
     uint8_t root_level;
     uint64_t generation2;
-    BTRFS_UUID uuid;
-    BTRFS_UUID parent_uuid;
-    BTRFS_UUID received_uuid;
+    btrfs_uuid uuid;
+    btrfs_uuid parent_uuid;
+    btrfs_uuid received_uuid;
     uint64_t ctransid;
     uint64_t otransid;
     uint64_t stransid;
@@ -351,7 +351,7 @@ typedef struct {
 typedef struct {
     uint64_t dev_id;
     uint64_t offset;
-    BTRFS_UUID dev_uuid;
+    btrfs_uuid dev_uuid;
 } CHUNK_ITEM_STRIPE;
 
 typedef struct {
@@ -470,7 +470,7 @@ typedef struct {
     uint64_t objid;
     uint64_t address;
     uint64_t length;
-    BTRFS_UUID chunktree_uuid;
+    btrfs_uuid chunktree_uuid;
 } DEV_EXTENT;
 
 #define BALANCE_FLAGS_DATA          0x1
