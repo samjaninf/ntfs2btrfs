@@ -1264,6 +1264,11 @@ static void update_chunk_root(root& chunk_root, enum btrfs_csum_type csum_type) 
 
                 calc_tree_hash(th, csum_type);
 
+                auto& it = chunk_root.items.at(ln[i].key);
+                auto& di2 = *(DEV_ITEM*)it.data();
+
+                di2.bytes_used = di.bytes_used;
+
                 return;
             }
         }
