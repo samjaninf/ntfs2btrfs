@@ -390,12 +390,11 @@ struct btrfs_block_group_item {
     le64 flags;
 } __attribute__ ((__packed__));
 
-typedef struct {
-    uint64_t dir;
-    uint64_t index;
-    uint16_t n;
-    char name[1];
-} ROOT_REF;
+struct btrfs_root_ref {
+    le64 dirid;
+    le64 sequence;
+    le16 name_len;
+} __attribute__ ((__packed__));
 
 typedef struct {
     uint64_t chunktree;

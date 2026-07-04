@@ -1286,13 +1286,13 @@ static root& add_image_subvol(root& root_root, root& fstree_root) {
     // add ROOT_REF and ROOT_BACKREF
 
     {
-        buffer_t buf(offsetof(ROOT_REF, name[0]) + sizeof(subvol_name) - 1);
-        auto& rr = *(ROOT_REF*)buf.data();
+        buffer_t buf(sizeof(btrfs_root_ref) + sizeof(subvol_name) - 1);
+        auto& rr = *(btrfs_root_ref*)buf.data();
 
-        rr.dir = SUBVOL_ROOT_INODE;
-        rr.index = 2;
-        rr.n = sizeof(subvol_name) - 1;
-        memcpy(rr.name, subvol_name, sizeof(subvol_name) - 1);
+        rr.dirid = SUBVOL_ROOT_INODE;
+        rr.sequence = 2;
+        rr.name_len = sizeof(subvol_name) - 1;
+        memcpy(&rr + 1, subvol_name, sizeof(subvol_name) - 1);
 
         add_item(root_root, BTRFS_ROOT_FSTREE, btrfs_key_type::ROOT_REF, image_subvol_id, buf);
         add_item_move(root_root, image_subvol_id, btrfs_key_type::ROOT_BACKREF, BTRFS_ROOT_FSTREE, buf);
