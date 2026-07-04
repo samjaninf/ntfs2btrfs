@@ -487,7 +487,7 @@ static void add_item(root& r, uint64_t obj_id, btrfs_key_type obj_type, uint64_t
 static void add_chunk(root& chunk_root, root& devtree_root, root& extent_root, const chunk& c) {
     btrfs_chunk ci1s;
     DEV_EXTENT de;
-    BLOCK_GROUP_ITEM bgi;
+    btrfs_block_group_item bgi;
 
     memset(&ci1s, 0, sizeof(btrfs_chunk));
 
@@ -514,11 +514,11 @@ static void add_chunk(root& chunk_root, root& devtree_root, root& extent_root, c
 
     add_item(devtree_root, 1, btrfs_key_type::DEV_EXTENT, c.disk_start, &de, sizeof(DEV_EXTENT));
 
-    bgi.chunk_tree = 0x100;
+    bgi.chunk_objectid = 0x100;
     bgi.flags = c.type;
     // bgi.used gets set in update_extent_root
 
-    add_item(extent_root, c.offset, btrfs_key_type::BLOCK_GROUP_ITEM, c.length, &bgi, sizeof(BLOCK_GROUP_ITEM));
+    add_item(extent_root, c.offset, btrfs_key_type::BLOCK_GROUP_ITEM, c.length, &bgi, sizeof(btrfs_block_group_item));
 }
 
 static uint64_t allocate_metadata(uint64_t r, root& extent_root, uint8_t level) {
@@ -1181,7 +1181,7 @@ static void update_extent_root(root& extent_root, enum btrfs_csum_type csum_type
 
         for (unsigned int i = 0; i < th.num_items; i++) {
             if (ln[i].key.type == btrfs_key_type::BLOCK_GROUP_ITEM) {
-                auto& bgi = *(BLOCK_GROUP_ITEM*)((uint8_t*)t.data() + sizeof(tree_header) + ln[i].offset);
+                auto& bgi = *(btrfs_block_group_item*)((uint8_t*)t.data() + sizeof(tree_header) + ln[i].offset);
 
                 for (const auto& c : chunks) {
                     if (c.offset == ln[i].key.objectid) {

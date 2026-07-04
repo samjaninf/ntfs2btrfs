@@ -413,11 +413,11 @@ typedef struct {
     uint32_t count;
 } EXTENT_DATA_REF;
 
-typedef struct {
-    uint64_t used;
-    uint64_t chunk_tree;
-    uint64_t flags;
-} BLOCK_GROUP_ITEM;
+struct btrfs_block_group_item {
+    le64 used;
+    le64 chunk_objectid;
+    le64 flags;
+} __attribute__ ((__packed__));
 
 typedef struct {
     uint64_t root;
