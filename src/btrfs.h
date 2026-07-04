@@ -308,33 +308,33 @@ struct btrfs_inode_item {
     btrfs_timespec otime;
 } __attribute__((packed));
 
-typedef struct {
+struct btrfs_root_item {
     btrfs_inode_item inode;
-    uint64_t generation;
-    uint64_t objid;
-    uint64_t block_number;
-    uint64_t byte_limit;
-    uint64_t bytes_used;
-    uint64_t last_snapshot_generation;
-    uint64_t flags;
-    uint32_t num_references;
+    le64 generation;
+    le64 root_dirid;
+    le64 bytenr;
+    le64 byte_limit;
+    le64 bytes_used;
+    le64 last_snapshot;
+    le64 flags;
+    le32 refs;
     btrfs_key drop_progress;
     uint8_t drop_level;
-    uint8_t root_level;
-    uint64_t generation2;
+    uint8_t level;
+    le64 generation_v2;
     btrfs_uuid uuid;
     btrfs_uuid parent_uuid;
     btrfs_uuid received_uuid;
-    uint64_t ctransid;
-    uint64_t otransid;
-    uint64_t stransid;
-    uint64_t rtransid;
+    le64 ctransid;
+    le64 otransid;
+    le64 stransid;
+    le64 rtransid;
     btrfs_timespec ctime;
     btrfs_timespec otime;
     btrfs_timespec stime;
     btrfs_timespec rtime;
-    uint64_t reserved[8];
-} ROOT_ITEM;
+    le64 reserved[8];
+} __attribute__((packed));
 
 typedef struct {
     uint64_t size;

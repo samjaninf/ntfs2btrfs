@@ -1096,9 +1096,9 @@ static void add_dev_item(root& chunk_root) {
 }
 
 static void add_to_root_root(const root& r, root& root_root) {
-    ROOT_ITEM ri;
+    btrfs_root_item ri;
 
-    memset(&ri, 0, sizeof(ROOT_ITEM));
+    memset(&ri, 0, sizeof(btrfs_root_item));
 
     ri.inode.generation = 1;
     ri.inode.nbytes = tree_size;
@@ -1106,17 +1106,17 @@ static void add_to_root_root(const root& r, root& root_root) {
     ri.inode.nlink = 1;
     ri.inode.mode = __S_IFDIR | S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
     ri.generation = 1;
-    ri.objid = (r.id == BTRFS_ROOT_FSTREE || r.id >= 0x100) ? SUBVOL_ROOT_INODE : 0;
+    ri.root_dirid = (r.id == BTRFS_ROOT_FSTREE || r.id >= 0x100) ? SUBVOL_ROOT_INODE : 0;
     ri.flags = r.readonly ? BTRFS_SUBVOL_READONLY : 0;
-    ri.num_references = 1;
-    ri.generation2 = 1;
+    ri.refs = 1;
+    ri.generation_v2 = 1;
 
     if (r.id == image_subvol_id)
         ri.uuid = subvol_uuid;
 
-    // block_number, bytes_used, and root_level are set in update_root_root
+    // bytenr, bytes_used, and level are set in update_root_root
 
-    add_item(root_root, r.id, btrfs_key_type::ROOT_ITEM, 0, &ri, sizeof(ROOT_ITEM));
+    add_item(root_root, r.id, btrfs_key_type::ROOT_ITEM, 0, &ri, sizeof(btrfs_root_item));
 }
 
 static void update_root_root(root& root_root, enum btrfs_csum_type csum_type) {
@@ -1131,12 +1131,12 @@ static void update_root_root(root& root_root, enum btrfs_csum_type csum_type) {
 
         for (unsigned int i = 0; i < th.num_items; i++) {
             if (ln[i].key.type == btrfs_key_type::ROOT_ITEM) {
-                auto& ri = *(ROOT_ITEM*)((uint8_t*)t.data() + sizeof(tree_header) + ln[i].offset);
+                auto& ri = *(btrfs_root_item*)((uint8_t*)t.data() + sizeof(tree_header) + ln[i].offset);
 
                 for (const auto& r : roots) {
                     if (r.id == ln[i].key.objectid) {
-                        ri.block_number = r.tree_addr;
-                        ri.root_level = r.level;
+                        ri.bytenr = r.tree_addr;
+                        ri.level = r.level;
                         ri.bytes_used = r.metadata_size;
 
                         changed = true;

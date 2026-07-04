@@ -354,9 +354,9 @@ uint64_t btrfs::find_root_addr(uint64_t root) {
         if (key.objectid != root || key.type != btrfs_key_type::ROOT_ITEM)
             return true;
 
-        const auto& ri = *(ROOT_ITEM*)data.data();
+        const auto& ri = *(btrfs_root_item*)data.data();
 
-        ret = ri.block_number;
+        ret = ri.bytenr;
 
         return false;
     });
