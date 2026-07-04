@@ -32,6 +32,14 @@ if(WITH_ZSTD)
     pkg_check_modules(ZSTD REQUIRED libzstd)
 endif()
 
+add_library(lzx STATIC
+    src/ebiggers/lzx_decompress.c
+    src/ebiggers/lzx_common.c
+    src/ebiggers/aligned_malloc.c
+    src/ebiggers/decompress_common.c
+    src/ebiggers/xpress_decompress.c
+)
+
 set(SRC_FILES src/ntfs2btrfs.cpp
     src/ntfs.cpp
     src/decomp.cpp
@@ -41,11 +49,7 @@ set(SRC_FILES src/ntfs2btrfs.cpp
     src/xxhash.c
     src/sha256.c
     src/blake2b-ref.c
-    src/ebiggers/lzx_decompress.c
-    src/ebiggers/lzx_common.c
-    src/ebiggers/aligned_malloc.c
-    src/ebiggers/decompress_common.c
-    src/ebiggers/xpress_decompress.c)
+)
 
 if(MSVC)
     enable_language(ASM_MASM)
@@ -62,6 +66,7 @@ if(CMAKE_BUILD_TYPE MATCHES "Debug")
 endif()
 
 target_link_libraries(ntfs2btrfs fmt::fmt-header-only)
+target_link_libraries(ntfs2btrfs lzx)
 
 if(WITH_ZLIB)
     target_link_libraries(ntfs2btrfs ZLIB::ZLIB)
