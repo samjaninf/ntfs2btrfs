@@ -278,7 +278,7 @@ bool btrfs::walk_tree(uint64_t addr, const function<bool(const btrfs_key&, strin
         return true;
     }
 
-    auto nodes = (leaf_node*)(&th + 1);
+    auto nodes = (btrfs_item*)(&th + 1);
 
     for (unsigned int i = 0; i < th.nritems; i++) {
         const auto& n = nodes[i];

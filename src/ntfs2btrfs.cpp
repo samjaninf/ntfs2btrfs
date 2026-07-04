@@ -744,11 +744,11 @@ void root::create_trees(root& extent_root, enum btrfs_csum_type csum_type) {
     };
 
     {
-        auto ln = (leaf_node*)((uint8_t*)buf.data() + sizeof(btrfs_header));
+        auto ln = (btrfs_item*)((uint8_t*)buf.data() + sizeof(btrfs_header));
         uint32_t data_off = tree_size - (uint32_t)sizeof(btrfs_header);
 
         for (const auto& i : items) {
-            if (sizeof(leaf_node) + i.second.size() > space_left) { // tree complete, add to list
+            if (sizeof(btrfs_item) + i.second.size() > space_left) { // tree complete, add to list
                 th.bytenr = get_address(extent_root, 0);
                 th.nritems = num_items;
 
@@ -767,10 +767,10 @@ void root::create_trees(root& extent_root, enum btrfs_csum_type csum_type) {
 
                 space_left = data_off = tree_size - (uint32_t)sizeof(btrfs_header);
                 num_items = 0;
-                ln = (leaf_node*)((uint8_t*)buf.data() + sizeof(btrfs_header));
+                ln = (btrfs_item*)((uint8_t*)buf.data() + sizeof(btrfs_header));
             }
 
-            if (sizeof(leaf_node) + i.second.size() + sizeof(btrfs_header) > tree_size)
+            if (sizeof(btrfs_item) + i.second.size() + sizeof(btrfs_header) > tree_size)
                 throw formatted_error("Item too large for tree.");
 
             ln->key = i.first;
@@ -786,7 +786,7 @@ void root::create_trees(root& extent_root, enum btrfs_csum_type csum_type) {
             ln++;
 
             num_items++;
-            space_left -= (uint32_t)(sizeof(leaf_node) + i.second.size());
+            space_left -= (uint32_t)(sizeof(btrfs_item) + i.second.size());
         }
     }
 
@@ -863,7 +863,7 @@ void root::create_trees(root& extent_root, enum btrfs_csum_type csum_type) {
                 trees_added++;
             }
 
-            auto ln = (leaf_node*)((uint8_t*)t.data() + sizeof(btrfs_header));
+            auto ln = (btrfs_item*)((uint8_t*)t.data() + sizeof(btrfs_header));
 
             in->key = ln->key;
             in->address = th2->bytenr;
@@ -1127,7 +1127,7 @@ static void update_root_root(root& root_root, enum btrfs_csum_type csum_type) {
         if (th.level > 0)
             return;
 
-        auto ln = (leaf_node*)((uint8_t*)t.data() + sizeof(btrfs_header));
+        auto ln = (btrfs_item*)((uint8_t*)t.data() + sizeof(btrfs_header));
         bool changed = true;
 
         for (unsigned int i = 0; i < th.nritems; i++) {
@@ -1177,7 +1177,7 @@ static void update_extent_root(root& extent_root, enum btrfs_csum_type csum_type
         if (th.level > 0)
             return;
 
-        auto ln = (leaf_node*)((uint8_t*)t.data() + sizeof(btrfs_header));
+        auto ln = (btrfs_item*)((uint8_t*)t.data() + sizeof(btrfs_header));
         bool changed = true;
 
         for (unsigned int i = 0; i < th.nritems; i++) {
@@ -1251,7 +1251,7 @@ static void update_chunk_root(root& chunk_root, enum btrfs_csum_type csum_type) 
         if (th.level > 0)
             return;
 
-        auto ln = (leaf_node*)((uint8_t*)t.data() + sizeof(btrfs_header));
+        auto ln = (btrfs_item*)((uint8_t*)t.data() + sizeof(btrfs_header));
 
         for (unsigned int i = 0; i < th.nritems; i++) {
             if (ln[i].key.objectid == 1 && ln[i].key.type == btrfs_key_type::DEV_ITEM && ln[i].key.offset == 1) {
@@ -2169,7 +2169,7 @@ static void add_inode(root& r, uint64_t inode, uint64_t ntfs_inode, bool& is_dir
                     static const char xattr_prefix[] = "user.";
 
                     auto ads_name = utf16_to_utf8(name);
-                    auto max_xattr_size = (uint32_t)(tree_size - sizeof(btrfs_header) - sizeof(leaf_node) - sizeof(btrfs_dir_item) - ads_name.length() - (sizeof(xattr_prefix) - 1));
+                    auto max_xattr_size = (uint32_t)(tree_size - sizeof(btrfs_header) - sizeof(btrfs_item) - sizeof(btrfs_dir_item) - ads_name.length() - (sizeof(xattr_prefix) - 1));
 
                     // FIXME - check xattr_name not reserved
 
@@ -2379,7 +2379,7 @@ static void add_inode(root& r, uint64_t inode, uint64_t ntfs_inode, bool& is_dir
             }
 
             case ntfs_attribute::SECURITY_DESCRIPTOR: {
-                auto max_sd_size = (uint32_t)(tree_size - sizeof(btrfs_header) - sizeof(leaf_node) - sizeof(btrfs_dir_item) - sizeof(EA_NTACL) + 1);
+                auto max_sd_size = (uint32_t)(tree_size - sizeof(btrfs_header) - sizeof(btrfs_item) - sizeof(btrfs_dir_item) - sizeof(EA_NTACL) + 1);
 
                 if (att.FormCode == NTFS_ATTRIBUTE_FORM::RESIDENT_FORM) {
                     if (att.Form.Resident.ValueLength > max_sd_size) {
@@ -3388,7 +3388,7 @@ static void calc_checksums(root& csum_root, runs_t runs, ntfs& dev, enum btrfs_c
 
     // See __MAX_CSUM_ITEMS in kernel
 
-    auto max_run = (uint32_t)((tree_size - sizeof(btrfs_header) - (sizeof(leaf_node) * 2)) / csum_size) - 1;
+    auto max_run = (uint32_t)((tree_size - sizeof(btrfs_header) - (sizeof(btrfs_item) * 2)) / csum_size) - 1;
 
     // max_run is in sectors; convert to clusters for the run lists
     uint32_t max_run_clusters = max_run / (cluster_size / sector_size);
