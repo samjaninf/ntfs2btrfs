@@ -413,26 +413,24 @@ void rollback(const string& fn) {
         if (key.objectid != inode || key.type != btrfs_key_type::EXTENT_DATA)
             return true;
 
-        const auto& ed = *(EXTENT_DATA*)data.data();
+        const auto& ed = *(btrfs_file_extent_item*)data.data();
 
-        if (ed.compression != btrfs_compression::none)
+        if (ed.compression != btrfs_compression_type::none)
             throw runtime_error("NTFS image has been compressed, cannot process.");
 
-        if (ed.type == btrfs_extent_type::prealloc)
+        if (ed.type == btrfs_file_extent_item_type::prealloc)
             return true; // treat as if sparse
 
-        if (ed.type == btrfs_extent_type::inline_extent)
+        if (ed.type == btrfs_file_extent_item_type::inline_extent)
             throw runtime_error("NTFS image has inline extents, cannot process.");
 
-        if (ed.type != btrfs_extent_type::regular)
+        if (ed.type != btrfs_file_extent_item_type::reg)
             throw formatted_error("Unknown extent type {}.", (unsigned int)ed.type);
 
-        const auto& ed2 = *(EXTENT_DATA2*)ed.data;
-
-        if (ed2.address == 0 && ed2.size == 0)
+        if (ed.disk_bytenr == 0 && ed.disk_num_bytes == 0)
             return true; // sparse, skip
 
-        extents.emplace(key.offset, make_pair(ed2.address, ed2.size));
+        extents.emplace(key.offset, make_pair(ed.disk_bytenr, ed.disk_num_bytes));
 
         return true;
     });

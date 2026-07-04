@@ -63,16 +63,16 @@ enum class btrfs_key_type : uint8_t {
 #define BTRFS_ROOT_UUID         9
 #define BTRFS_ROOT_DATA_RELOC   0xFFFFFFFFFFFFFFF7
 
-enum class btrfs_compression : uint8_t {
+enum class btrfs_compression_type : uint8_t {
     none = 0,
     zlib = 1,
     lzo = 2,
     zstd = 3
 };
 
-enum class btrfs_extent_type : uint8_t {
+enum class btrfs_file_extent_item_type : uint8_t {
     inline_extent = 0,
-    regular = 1,
+    reg = 1,
     prealloc = 2
 };
 
@@ -341,22 +341,18 @@ struct btrfs_chunk {
     btrfs_stripe stripe[1];
 } __attribute__((packed));
 
-typedef struct {
-    uint64_t generation;
-    uint64_t decoded_size;
-    enum btrfs_compression compression;
+struct btrfs_file_extent_item {
+    le64 generation;
+    le64 ram_bytes;
+    btrfs_compression_type compression;
     uint8_t encryption;
-    uint16_t encoding;
-    enum btrfs_extent_type type;
-    uint8_t data[1];
-} EXTENT_DATA;
-
-typedef struct {
-    uint64_t address;
-    uint64_t size;
-    uint64_t offset;
-    uint64_t num_bytes;
-} EXTENT_DATA2;
+    le16 other_encoding;
+    btrfs_file_extent_item_type type;
+    le64 disk_bytenr;
+    le64 disk_num_bytes;
+    le64 offset;
+    le64 num_bytes;
+} __attribute__ ((__packed__));
 
 struct btrfs_inode_ref {
     le64 index;
