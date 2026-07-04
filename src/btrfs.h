@@ -288,28 +288,28 @@ struct btrfs_timespec {
     le32 nsec;
 } __attribute__((packed));
 
-typedef struct {
-    uint64_t generation;
-    uint64_t transid;
-    uint64_t st_size;
-    uint64_t st_blocks;
-    uint64_t block_group;
-    uint32_t st_nlink;
-    uint32_t st_uid;
-    uint32_t st_gid;
-    uint32_t st_mode;
-    uint64_t st_rdev;
-    uint64_t flags;
-    uint64_t sequence;
-    uint8_t reserved[32];
-    btrfs_timespec st_atime;
-    btrfs_timespec st_ctime;
-    btrfs_timespec st_mtime;
+struct btrfs_inode_item {
+    le64 generation;
+    le64 transid;
+    le64 size;
+    le64 nbytes;
+    le64 block_group;
+    le32 nlink;
+    le32 uid;
+    le32 gid;
+    le32 mode;
+    le64 rdev;
+    le64 flags;
+    le64 sequence;
+    le64 reserved[4];
+    btrfs_timespec atime;
+    btrfs_timespec ctime;
+    btrfs_timespec mtime;
     btrfs_timespec otime;
-} INODE_ITEM;
+} __attribute__((packed));
 
 typedef struct {
-    INODE_ITEM inode;
+    btrfs_inode_item inode;
     uint64_t generation;
     uint64_t objid;
     uint64_t block_number;

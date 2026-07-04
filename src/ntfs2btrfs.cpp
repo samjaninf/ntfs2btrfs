@@ -1101,10 +1101,10 @@ static void add_to_root_root(const root& r, root& root_root) {
     memset(&ri, 0, sizeof(ROOT_ITEM));
 
     ri.inode.generation = 1;
-    ri.inode.st_blocks = tree_size;
-    ri.inode.st_size = 3;
-    ri.inode.st_nlink = 1;
-    ri.inode.st_mode = __S_IFDIR | S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+    ri.inode.nbytes = tree_size;
+    ri.inode.size = 3;
+    ri.inode.nlink = 1;
+    ri.inode.mode = __S_IFDIR | S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
     ri.generation = 1;
     ri.objid = (r.id == BTRFS_ROOT_FSTREE || r.id >= 0x100) ? SUBVOL_ROOT_INODE : 0;
     ri.flags = r.readonly ? BTRFS_SUBVOL_READONLY : 0;
@@ -1228,17 +1228,17 @@ static void add_inode_ref(root& r, uint64_t inode, uint64_t parent, uint64_t ind
 }
 
 static void populate_fstree(root& r) {
-    INODE_ITEM ii;
+    btrfs_inode_item ii;
 
-    memset(&ii, 0, sizeof(INODE_ITEM));
+    memset(&ii, 0, sizeof(btrfs_inode_item));
 
     ii.generation = 1;
     ii.transid = 1;
-    ii.st_nlink = 1;
-    ii.st_mode = __S_IFDIR | S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+    ii.nlink = 1;
+    ii.mode = __S_IFDIR | S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
     ii.sequence = 1;
 
-    add_item(r, SUBVOL_ROOT_INODE, btrfs_key_type::INODE_ITEM, 0, &ii, sizeof(INODE_ITEM));
+    add_item(r, SUBVOL_ROOT_INODE, btrfs_key_type::INODE_ITEM, 0, &ii, sizeof(btrfs_inode_item));
 
     add_inode_ref(r, SUBVOL_ROOT_INODE, SUBVOL_ROOT_INODE, 0, "..");
 }
@@ -1320,7 +1320,7 @@ static root& add_image_subvol(root& root_root, root& fstree_root) {
         add_item_move(fstree_root, SUBVOL_ROOT_INODE, btrfs_key_type::DIR_INDEX, 2, buf);
     }
 
-    // increase st_size in parent dir
+    // increase size in parent dir
     if (fstree_root.dir_size.count(SUBVOL_ROOT_INODE) == 0)
         fstree_root.dir_size[SUBVOL_ROOT_INODE] = (sizeof(subvol_name) - 1) * 2;
     else
@@ -1332,37 +1332,37 @@ static root& add_image_subvol(root& root_root, root& fstree_root) {
 }
 
 static void create_image(root& r, ntfs& dev, const runs_t& runs, uint64_t inode, bool nocsum) {
-    INODE_ITEM ii;
+    btrfs_inode_item ii;
     uint64_t cluster_size = (uint64_t)dev.boot_sector->BytesPerSector * (uint64_t)dev.boot_sector->SectorsPerCluster;
 
     // add INODE_ITEM
 
-    memset(&ii, 0, sizeof(INODE_ITEM));
+    memset(&ii, 0, sizeof(btrfs_inode_item));
 
     ii.generation = 1;
     ii.transid = 1;
-    ii.st_size = orig_device_size;
-    ii.st_nlink = 1;
-    ii.st_mode = __S_IFREG | S_IRUSR | S_IWUSR;
+    ii.size = orig_device_size;
+    ii.nlink = 1;
+    ii.mode = __S_IFREG | S_IRUSR | S_IWUSR;
     ii.sequence = 1;
 
     if (nocsum)
         ii.flags = BTRFS_INODE_NODATACOW | BTRFS_INODE_NODATASUM;
 
     // FIXME - use current time for the following
-//     btrfs_timespec st_atime;
-//     btrfs_timespec st_ctime;
-//     btrfs_timespec st_mtime;
+//     btrfs_timespec atime;
+//     btrfs_timespec ctime;
+//     btrfs_timespec mtime;
 //     btrfs_timespec otime;
 
     for (const auto& rs : runs) {
         for (const auto& run : rs.second) {
             if (!run.relocated && !run.not_in_img)
-                ii.st_blocks += run.length * cluster_size;
+                ii.nbytes += run.length * cluster_size;
         }
     }
 
-    add_item(r, inode, btrfs_key_type::INODE_ITEM, 0, &ii, sizeof(INODE_ITEM));
+    add_item(r, inode, btrfs_key_type::INODE_ITEM, 0, &ii, sizeof(btrfs_inode_item));
 
     // add DIR_ITEM and DIR_INDEX
 
@@ -1390,13 +1390,13 @@ static void create_image(root& r, ntfs& dev, const runs_t& runs, uint64_t inode,
 
     add_inode_ref(r, inode, SUBVOL_ROOT_INODE, 2, image_filename);
 
-    // increase st_size in parent dir
+    // increase size in parent dir
 
     for (auto& it : r.items) {
         if (it.first.objectid == SUBVOL_ROOT_INODE && it.first.type == btrfs_key_type::INODE_ITEM) {
-            auto& ii2 = *(INODE_ITEM*)it.second.data();
+            auto& ii2 = *(btrfs_inode_item*)it.second.data();
 
-            ii2.st_size += (sizeof(image_filename) - 1) * 2;
+            ii2.size += (sizeof(image_filename) - 1) * 2;
             break;
         }
     }
@@ -1724,7 +1724,7 @@ static void link_inode(root& r, uint64_t inode, uint64_t dir, string_view name,
 
     add_inode_ref(r, inode, dir, seq, name);
 
-    // increase st_size in parent dir
+    // increase size in parent dir
 
     if (r.dir_size.count(dir) == 0)
         r.dir_size[dir] = name.length() * 2;
@@ -2076,7 +2076,7 @@ static void fix_truncated_utf8(string& s) {
 static void add_inode(root& r, uint64_t inode, uint64_t ntfs_inode, bool& is_dir, runs_t& runs,
                       ntfs_file& secure, ntfs& dev, const list<uint64_t>& skiplist, enum btrfs_compression opt_compression,
                       bool nocsum) {
-    INODE_ITEM ii;
+    btrfs_inode_item ii;
     uint64_t file_size = 0;
     list<mapping> mappings, wof_mappings;
     vector<tuple<uint64_t, string>> links;
@@ -2488,7 +2488,7 @@ static void add_inode(root& r, uint64_t inode, uint64_t ntfs_inode, bool& is_dir
 
     // FIXME - form user.EA xattr from EAs we don't recognize
 
-    memset(&ii, 0, sizeof(INODE_ITEM));
+    memset(&ii, 0, sizeof(btrfs_inode_item));
 
     optional<uint32_t> mode;
     auto item_type = btrfs_dir_item_type::unknown;
@@ -2496,11 +2496,11 @@ static void add_inode(root& r, uint64_t inode, uint64_t ntfs_inode, bool& is_dir
 
     auto set_mode = [&](uint32_t& m) {
         if (is_dir && !__S_ISTYPE(m, __S_IFDIR)) {
-            add_warning("st_mode did not have S_IFDIR set, setting.");
+            add_warning("mode did not have S_IFDIR set, setting.");
             m &= ~__S_IFMT;
             m |= __S_IFDIR;
         } else if (!is_dir && __S_ISTYPE(m, __S_IFDIR)) {
-            add_warning("st_mode had S_IFDIR set, clearing.");
+            add_warning("mode had S_IFDIR set, clearing.");
             m &= ~__S_IFMT;
             m |= __S_IFREG;
         }
@@ -2549,14 +2549,14 @@ static void add_inode(root& r, uint64_t inode, uint64_t ntfs_inode, bool& is_dir
                 continue;
             }
 
-            ii.st_uid = *(uint32_t*)v.data();
+            ii.uid = *(uint32_t*)v.data();
         } else if (n == "$LXGID") {
             if (v.size() != sizeof(uint32_t)) {
                 add_warning("$LXGID EA was {} bytes, expected {}", v.size(), sizeof(uint32_t));
                 continue;
             }
 
-            ii.st_gid = *(uint32_t*)v.data();
+            ii.gid = *(uint32_t*)v.data();
         } else if (n == "$LXMOD") {
             if (v.size() != sizeof(uint32_t)) {
                 add_warning("$LXMOD EA was {} bytes, expected {}", v.size(), sizeof(uint32_t));
@@ -2579,7 +2579,7 @@ static void add_inode(root& r, uint64_t inode, uint64_t ntfs_inode, bool& is_dir
                 continue;
             }
 
-            ii.st_rdev = (d.major << 20) | (d.minor & 0xfffff);
+            ii.rdev = (d.major << 20) | (d.minor & 0xfffff);
         } else if (n == "LXATTRB") {
             if (v.size() != sizeof(lxattrb)) {
                 add_warning("LXATTRB EA was {} bytes, expected {}", v.size(), sizeof(lxattrb));
@@ -2601,15 +2601,15 @@ static void add_inode(root& r, uint64_t inode, uint64_t ntfs_inode, bool& is_dir
             mode = l.mode;
             set_mode(mode.value());
 
-            ii.st_uid = l.uid;
-            ii.st_gid = l.gid;
-            ii.st_rdev = l.rdev;
-            ii.st_atime.sec = l.atime;
-            ii.st_atime.nsec = l.atime_ns;
-            ii.st_mtime.sec = l.mtime;
-            ii.st_mtime.nsec = l.mtime_ns;
-            ii.st_ctime.sec = l.ctime;
-            ii.st_ctime.nsec = l.ctime_ns;
+            ii.uid = l.uid;
+            ii.gid = l.gid;
+            ii.rdev = l.rdev;
+            ii.atime.sec = l.atime;
+            ii.atime.nsec = l.atime_ns;
+            ii.mtime.sec = l.mtime;
+            ii.mtime.nsec = l.mtime_ns;
+            ii.ctime.sec = l.ctime;
+            ii.ctime.nsec = l.ctime_ns;
 
             has_lxattrb = true;
         } else if (n == "LX.SECURITY.CAPABILITY") {
@@ -2787,9 +2787,9 @@ static void add_inode(root& r, uint64_t inode, uint64_t ntfs_inode, bool& is_dir
         ii.otime = win_time_to_unix(si.CreationTime);
 
         if (!has_lxattrb) {
-            ii.st_atime = win_time_to_unix(si.LastAccessTime);
-            ii.st_mtime = win_time_to_unix(si.LastWriteTime);
-            ii.st_ctime = win_time_to_unix(si.ChangeTime);
+            ii.atime = win_time_to_unix(si.LastAccessTime);
+            ii.mtime = win_time_to_unix(si.LastWriteTime);
+            ii.ctime = win_time_to_unix(si.ChangeTime);
         }
     }
 
@@ -2901,20 +2901,20 @@ static void add_inode(root& r, uint64_t inode, uint64_t ntfs_inode, bool& is_dir
     }
 
     if (!is_dir)
-        ii.st_size = file_size;
+        ii.size = file_size;
 
-    ii.st_nlink = (uint32_t)links.size();
+    ii.nlink = (uint32_t)links.size();
 
     if (mode.has_value())
-        ii.st_mode = mode.value();
+        ii.mode = mode.value();
     else {
         if (is_dir)
-            ii.st_mode = __S_IFDIR | S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+            ii.mode = __S_IFDIR | S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
         else
-            ii.st_mode = __S_IFREG | S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+            ii.mode = __S_IFREG | S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
 
         if (!symlink.empty())
-            ii.st_mode |= __S_IFLNK;
+            ii.mode |= __S_IFLNK;
     }
 
     ii.sequence = 1;
@@ -2987,7 +2987,7 @@ static void add_inode(root& r, uint64_t inode, uint64_t ntfs_inode, bool& is_dir
         for (const auto& m : mappings) {
             if (m.lcn != 0) { // not sparse
                 ed.decoded_size = ed2.size = ed2.num_bytes = m.length * dev.boot_sector->BytesPerSector * dev.boot_sector->SectorsPerCluster;
-                ii.st_blocks += ed.decoded_size;
+                ii.nbytes += ed.decoded_size;
 
                 ed2.address = (m.lcn * dev.boot_sector->BytesPerSector * dev.boot_sector->SectorsPerCluster) + chunk_virt_offset;
                 ed2.offset = 0;
@@ -3086,7 +3086,7 @@ static void add_inode(root& r, uint64_t inode, uint64_t ntfs_inode, bool& is_dir
 
                 ed.decoded_size = ed2.num_bytes = len;
                 ed2.size = ed.compression == btrfs_compression::none ? len : compdata.size();
-                ii.st_blocks += ed.decoded_size;
+                ii.nbytes += ed.decoded_size;
 
                 ed2.address = allocate_data(ed2.size, true);
                 ed2.offset = 0;
@@ -3147,11 +3147,11 @@ static void add_inode(root& r, uint64_t inode, uint64_t ntfs_inode, bool& is_dir
 
             add_item_move(r, inode, btrfs_key_type::EXTENT_DATA, 0, buf);
 
-            ii.st_blocks = inline_data.size();
+            ii.nbytes = inline_data.size();
         }
     }
 
-    add_item(r, inode, btrfs_key_type::INODE_ITEM, 0, &ii, sizeof(INODE_ITEM));
+    add_item(r, inode, btrfs_key_type::INODE_ITEM, 0, &ii, sizeof(btrfs_inode_item));
 
     if (item_type == btrfs_dir_item_type::unknown) {
         if (is_dir)
@@ -3663,7 +3663,7 @@ static void calc_used_space(const runs_t& runs, uint32_t cluster_size) {
 }
 
 static void populate_root_root(root& root_root) {
-    INODE_ITEM ii;
+    btrfs_inode_item ii;
 
     static const char default_subvol[] = "default";
     static const uint32_t default_hash = 0x8dbfc2d2;
@@ -3675,14 +3675,14 @@ static void populate_root_root(root& root_root) {
 
     add_inode_ref(root_root, BTRFS_ROOT_FSTREE, BTRFS_ROOT_TREEDIR, 0, "default");
 
-    memset(&ii, 0, sizeof(INODE_ITEM));
+    memset(&ii, 0, sizeof(btrfs_inode_item));
 
     ii.generation = 1;
     ii.transid = 1;
-    ii.st_nlink = 1;
-    ii.st_mode = __S_IFDIR | S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+    ii.nlink = 1;
+    ii.mode = __S_IFDIR | S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
 
-    add_item(root_root, BTRFS_ROOT_TREEDIR, btrfs_key_type::INODE_ITEM, 0, &ii, sizeof(INODE_ITEM));
+    add_item(root_root, BTRFS_ROOT_TREEDIR, btrfs_key_type::INODE_ITEM, 0, &ii, sizeof(btrfs_inode_item));
 
     add_inode_ref(root_root, BTRFS_ROOT_TREEDIR, BTRFS_ROOT_TREEDIR, 0, "..");
 
@@ -3710,11 +3710,11 @@ static void add_subvol_uuid(root& r) {
 static void update_dir_sizes(root& r) {
     for (auto& it : r.items) {
         if (it.first.type == btrfs_key_type::INODE_ITEM && r.dir_size.count(it.first.objectid) != 0) {
-            auto& ii = *(INODE_ITEM*)it.second.data();
+            auto& ii = *(btrfs_inode_item*)it.second.data();
 
             // FIXME - would it speed things up if we removed the entry from dir_size map here?
 
-            ii.st_size = r.dir_size.at(it.first.objectid);
+            ii.size = r.dir_size.at(it.first.objectid);
         }
     }
 }
