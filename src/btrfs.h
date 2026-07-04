@@ -522,13 +522,6 @@ typedef struct {
     uint8_t reserved[32];
 } BALANCE_ITEM;
 
-#define BTRFS_FREE_SPACE_USING_BITMAPS      1
-
-typedef struct {
-    uint32_t count;
-    uint32_t flags;
-} FREE_SPACE_INFO;
-
 #define BTRFS_DEV_STAT_WRITE_ERRORS          0
 #define BTRFS_DEV_STAT_READ_ERRORS           1
 #define BTRFS_DEV_STAT_FLUSH_ERRORS          2
