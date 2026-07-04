@@ -382,16 +382,17 @@ void rollback(const string& fn) {
             return false;
 
         if (key.objectid == SUBVOL_ROOT_INODE && key.type == btrfs_key_type::DIR_ITEM && key.offset == hash) {
-            auto& di = *(DIR_ITEM*)data.data();
+            auto& di = *(btrfs_dir_item*)data.data();
+            auto name = (char*)&di + sizeof(btrfs_dir_item);
 
             // FIXME - handle hash collisions
 
-            if (di.n == sizeof(image_filename) - 1 && !memcmp(di.name, image_filename, di.n)) {
-                if (di.key.type != btrfs_key_type::INODE_ITEM)
+            if (di.name_len == sizeof(image_filename) - 1 && !memcmp(name, image_filename, di.name_len)) {
+                if (di.location.type != btrfs_key_type::INODE_ITEM)
                     throw formatted_error("DIR_ITEM for {} pointed to object type {}, expected INODE_ITEM.",
-                                          string_view(di.name, di.n), di.key.type);
+                                          string_view(name, di.name_len), di.location.type);
 
-                inode = di.key.objectid;
+                inode = di.location.objectid;
             }
 
             return false;

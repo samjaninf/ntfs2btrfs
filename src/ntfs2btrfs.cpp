@@ -1301,17 +1301,18 @@ static root& add_image_subvol(root& root_root, root& fstree_root) {
     // add DIR_ITEM and DIR_INDEX
 
     {
-        buffer_t buf(offsetof(DIR_ITEM, name[0]) + sizeof(subvol_name) - 1);
-        auto& di = *(DIR_ITEM*)buf.data();
+        buffer_t buf(sizeof(btrfs_dir_item) + sizeof(subvol_name) - 1);
+        auto& di = *(btrfs_dir_item*)buf.data();
+        auto* name = (char*)&di + sizeof(btrfs_dir_item);
 
-        di.key.objectid = image_subvol_id;
-        di.key.type = btrfs_key_type::ROOT_ITEM;
-        di.key.offset = 0xffffffffffffffff;
+        di.location.objectid = image_subvol_id;
+        di.location.type = btrfs_key_type::ROOT_ITEM;
+        di.location.offset = 0xffffffffffffffff;
         di.transid = 1;
-        di.m = 0;
-        di.n = sizeof(subvol_name) - 1;
+        di.data_len = 0;
+        di.name_len = sizeof(subvol_name) - 1;
         di.type = btrfs_dir_item_type::dir;
-        memcpy(di.name, subvol_name, sizeof(subvol_name) - 1);
+        memcpy(name, subvol_name, sizeof(subvol_name) - 1);
 
         auto hash = calc_crc32c(0xfffffffe, (const uint8_t*)subvol_name, sizeof(subvol_name) - 1);
 
@@ -1366,17 +1367,18 @@ static void create_image(root& r, ntfs& dev, const runs_t& runs, uint64_t inode,
     // add DIR_ITEM and DIR_INDEX
 
     {
-        buffer_t buf(offsetof(DIR_ITEM, name[0]) + sizeof(image_filename) - 1);
-        auto& di = *(DIR_ITEM*)buf.data();
+        buffer_t buf(sizeof(btrfs_dir_item) + sizeof(image_filename) - 1);
+        auto& di = *(btrfs_dir_item*)buf.data();
+        auto* name = (char*)&di + sizeof(btrfs_dir_item);
 
-        di.key.objectid = inode;
-        di.key.type = btrfs_key_type::INODE_ITEM;
-        di.key.offset = 0;
+        di.location.objectid = inode;
+        di.location.type = btrfs_key_type::INODE_ITEM;
+        di.location.offset = 0;
         di.transid = 1;
-        di.m = 0;
-        di.n = sizeof(image_filename) - 1;
+        di.data_len = 0;
+        di.name_len = sizeof(image_filename) - 1;
         di.type = btrfs_dir_item_type::reg_file;
-        memcpy(di.name, image_filename, sizeof(image_filename) - 1);
+        memcpy(name, image_filename, sizeof(image_filename) - 1);
 
         auto hash = calc_crc32c(0xfffffffe, (const uint8_t*)image_filename, sizeof(image_filename) - 1);
 
@@ -1685,18 +1687,19 @@ static void link_inode(root& r, uint64_t inode, uint64_t dir, string_view name,
     seq = r.dir_seqs.at(dir);
 
     {
-        buffer_t buf(offsetof(DIR_ITEM, name[0]) + name.length());
+        buffer_t buf(sizeof(btrfs_dir_item) + name.length());
 
-        auto& di = *(DIR_ITEM*)buf.data();
+        auto& di = *(btrfs_dir_item*)buf.data();
+        auto* di_name = (char*)&di + sizeof(btrfs_dir_item);
 
-        di.key.objectid = inode;
-        di.key.type = btrfs_key_type::INODE_ITEM;
-        di.key.offset = 0;
+        di.location.objectid = inode;
+        di.location.type = btrfs_key_type::INODE_ITEM;
+        di.location.offset = 0;
         di.transid = 1;
-        di.m = 0;
-        di.n = (uint16_t)name.length();
+        di.data_len = 0;
+        di.name_len = (uint16_t)name.length();
         di.type = type;
-        memcpy(di.name, name.data(), name.length());
+        memcpy(di_name, name.data(), name.length());
 
         auto hash = calc_crc32c(0xfffffffe, (const uint8_t*)name.data(), (uint32_t)name.length());
 
@@ -1974,17 +1977,18 @@ static void process_mappings(const ntfs& dev, uint64_t inode, list<mapping>& map
 }
 
 static void set_xattr(root& r, uint64_t inode, string_view name, uint32_t hash, const buffer_t& data) {
-    buffer_t buf(offsetof(DIR_ITEM, name[0]) + name.size() + data.size());
-    auto& di = *(DIR_ITEM*)buf.data();
+    buffer_t buf(sizeof(btrfs_dir_item) + name.size() + data.size());
+    auto& di = *(btrfs_dir_item*)buf.data();
+    auto* di_name = (char*)&di + sizeof(btrfs_dir_item);
 
-    di.key.objectid = di.key.offset = 0;
-    di.key.type = (btrfs_key_type)0;
+    di.location.objectid = di.location.offset = 0;
+    di.location.type = (btrfs_key_type)0;
     di.transid = 1;
-    di.m = (uint16_t)data.size();
-    di.n = (uint16_t)name.size();
+    di.data_len = (uint16_t)data.size();
+    di.name_len = (uint16_t)name.size();
     di.type = btrfs_dir_item_type::xattr;
-    memcpy(di.name, name.data(), name.size());
-    memcpy(di.name + name.size(), data.data(), data.size());
+    memcpy(di_name, name.data(), name.size());
+    memcpy(di_name + name.size(), data.data(), data.size());
 
     add_item_move(r, inode, btrfs_key_type::XATTR_ITEM, hash, buf);
 }
@@ -2165,7 +2169,7 @@ static void add_inode(root& r, uint64_t inode, uint64_t ntfs_inode, bool& is_dir
                     static const char xattr_prefix[] = "user.";
 
                     auto ads_name = utf16_to_utf8(name);
-                    auto max_xattr_size = (uint32_t)(tree_size - sizeof(tree_header) - sizeof(leaf_node) - offsetof(DIR_ITEM, name[0]) - ads_name.length() - (sizeof(xattr_prefix) - 1));
+                    auto max_xattr_size = (uint32_t)(tree_size - sizeof(tree_header) - sizeof(leaf_node) - sizeof(btrfs_dir_item) - ads_name.length() - (sizeof(xattr_prefix) - 1));
 
                     // FIXME - check xattr_name not reserved
 
@@ -2375,7 +2379,7 @@ static void add_inode(root& r, uint64_t inode, uint64_t ntfs_inode, bool& is_dir
             }
 
             case ntfs_attribute::SECURITY_DESCRIPTOR: {
-                auto max_sd_size = (uint32_t)(tree_size - sizeof(tree_header) - sizeof(leaf_node) - offsetof(DIR_ITEM, name[0]) - sizeof(EA_NTACL) + 1);
+                auto max_sd_size = (uint32_t)(tree_size - sizeof(tree_header) - sizeof(leaf_node) - sizeof(btrfs_dir_item) - sizeof(EA_NTACL) + 1);
 
                 if (att.FormCode == NTFS_ATTRIBUTE_FORM::RESIDENT_FORM) {
                     if (att.Form.Resident.ValueLength > max_sd_size) {
@@ -3682,17 +3686,18 @@ static void populate_root_root(root& root_root) {
 
     add_inode_ref(root_root, BTRFS_ROOT_TREEDIR, BTRFS_ROOT_TREEDIR, 0, "..");
 
-    buffer_t buf(offsetof(DIR_ITEM, name[0]) + sizeof(default_subvol) - 1);
-    auto& di = *(DIR_ITEM*)buf.data();
+    buffer_t buf(sizeof(btrfs_dir_item) + sizeof(default_subvol) - 1);
+    auto& di = *(btrfs_dir_item*)buf.data();
+    auto* name = (char*)&di + sizeof(btrfs_dir_item);
 
-    di.key.objectid = BTRFS_ROOT_FSTREE;
-    di.key.type = btrfs_key_type::ROOT_ITEM;
-    di.key.offset = 0xffffffffffffffff;
+    di.location.objectid = BTRFS_ROOT_FSTREE;
+    di.location.type = btrfs_key_type::ROOT_ITEM;
+    di.location.offset = 0xffffffffffffffff;
     di.transid = 0;
-    di.m = 0;
-    di.n = sizeof(default_subvol) - 1;
+    di.data_len = 0;
+    di.name_len = sizeof(default_subvol) - 1;
     di.type = btrfs_dir_item_type::dir;
-    memcpy(di.name, default_subvol, sizeof(default_subvol) - 1);
+    memcpy(name, default_subvol, sizeof(default_subvol) - 1);
 
     add_item_move(root_root, BTRFS_ROOT_TREEDIR, btrfs_key_type::DIR_ITEM, default_hash, buf);
 }

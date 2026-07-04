@@ -10,6 +10,10 @@
 
 #include <stdint.h>
 
+using le64 = uint64_t;
+using le32 = uint32_t;
+using le16 = uint16_t;
+
 static const uint64_t superblock_addrs[] = { 0x10000, 0x4000000, 0x4000000000, 0x4000000000000, 0 };
 
 #define BTRFS_MAGIC         0x4d5f53665248425f
@@ -271,14 +275,13 @@ enum class btrfs_dir_item_type : uint8_t {
     xattr = 8,
 };
 
-typedef struct {
-    btrfs_key key;
-    uint64_t transid;
-    uint16_t m;
-    uint16_t n;
+struct btrfs_dir_item {
+    btrfs_key location;
+    le64 transid;
+    le16 data_len;
+    le16 name_len;
     btrfs_dir_item_type type;
-    char name[1];
-} DIR_ITEM;
+} __attribute__ ((__packed__));
 
 typedef struct {
     uint64_t seconds;
