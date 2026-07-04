@@ -396,12 +396,12 @@ struct btrfs_root_ref {
     le16 name_len;
 } __attribute__ ((__packed__));
 
-typedef struct {
-    uint64_t chunktree;
-    uint64_t objid;
-    uint64_t address;
-    uint64_t length;
-    btrfs_uuid chunktree_uuid;
-} DEV_EXTENT;
+struct btrfs_dev_extent {
+    le64 chunk_tree;
+    le64 chunk_objectid;
+    le64 chunk_offset;
+    le64 length;
+    btrfs_uuid chunk_tree_uuid;
+} __attribute__ ((__packed__));
 
 #pragma pack(pop)

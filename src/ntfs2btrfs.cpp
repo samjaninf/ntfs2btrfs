@@ -486,7 +486,7 @@ static void add_item(root& r, uint64_t obj_id, btrfs_key_type obj_type, uint64_t
 
 static void add_chunk(root& chunk_root, root& devtree_root, root& extent_root, const chunk& c) {
     btrfs_chunk ci1s;
-    DEV_EXTENT de;
+    btrfs_dev_extent de;
     btrfs_block_group_item bgi;
 
     memset(&ci1s, 0, sizeof(btrfs_chunk));
@@ -506,13 +506,13 @@ static void add_chunk(root& chunk_root, root& devtree_root, root& extent_root, c
 
     add_item(chunk_root, 0x100, btrfs_key_type::CHUNK_ITEM, c.offset, &ci1s, sizeof(ci1s));
 
-    de.chunktree = BTRFS_ROOT_CHUNK;
-    de.objid = 0x100;
-    de.address = c.offset;
+    de.chunk_tree = BTRFS_ROOT_CHUNK;
+    de.chunk_objectid = 0x100;
+    de.chunk_offset = c.offset;
     de.length = c.length;
-    de.chunktree_uuid = chunk_uuid;
+    de.chunk_tree_uuid = chunk_uuid;
 
-    add_item(devtree_root, 1, btrfs_key_type::DEV_EXTENT, c.disk_start, &de, sizeof(DEV_EXTENT));
+    add_item(devtree_root, 1, btrfs_key_type::DEV_EXTENT, c.disk_start, &de, sizeof(btrfs_dev_extent));
 
     bgi.chunk_objectid = 0x100;
     bgi.flags = c.type;
