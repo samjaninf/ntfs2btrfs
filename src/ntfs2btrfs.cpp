@@ -530,8 +530,8 @@ static uint64_t allocate_metadata(uint64_t r, root& extent_root, uint8_t level) 
     mi.extent_item.refs = 1;
     mi.extent_item.generation = 1;
     mi.extent_item.flags = EXTENT_ITEM_TREE_BLOCK;
-    mi.type = btrfs_key_type::TREE_BLOCK_REF;
-    mi.tbr.offset = r;
+    mi.eir.type = btrfs_key_type::TREE_BLOCK_REF;
+    mi.eir.offset = r;
 
     for (auto& c : chunks) {
         if ((system_chunk && c.type & BLOCK_FLAG_SYSTEM) || (!system_chunk && c.type & BLOCK_FLAG_METADATA)) {

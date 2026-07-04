@@ -369,9 +369,10 @@ struct btrfs_extent_item {
     le64 flags;
 } __attribute__ ((__packed__));
 
-typedef struct {
-    uint64_t offset;
-} TREE_BLOCK_REF;
+struct btrfs_extent_inline_ref {
+    btrfs_key_type type;
+    le64 offset;
+} __attribute__ ((__packed__));
 
 struct btrfs_extent_data_ref {
     le64 root;

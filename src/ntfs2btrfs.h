@@ -279,8 +279,7 @@ public:
 
 typedef struct {
     btrfs_extent_item extent_item;
-    btrfs_key_type type;
-    TREE_BLOCK_REF tbr;
+    btrfs_extent_inline_ref eir;
 } metadata_item;
 
 typedef struct {
