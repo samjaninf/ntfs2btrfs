@@ -1113,7 +1113,7 @@ static void add_to_root_root(const root& r, root& root_root) {
 
     ri.generation = 1;
     ri.root_dirid = is_subvol ? BTRFS_FIRST_FREE_OBJECTID : 0;
-    ri.flags = r.readonly ? BTRFS_SUBVOL_READONLY : 0;
+    ri.flags = r.readonly ? BTRFS_ROOT_SUBVOL_RDONLY : 0;
     ri.refs = 1;
     ri.generation_v2 = 1;
 

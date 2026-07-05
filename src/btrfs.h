@@ -105,7 +105,7 @@ constexpr uint64_t BTRFS_INODE_COMPRESS = 1 << 11;
 constexpr uint64_t BTRFS_INODE_ENCRYPT = 1 << 12;
 constexpr uint64_t BTRFS_INODE_ROOT_ITEM_INIT = (uint64_t)1 << 31;
 
-#define BTRFS_SUBVOL_READONLY   0x1
+constexpr uint64_t BTRFS_ROOT_SUBVOL_RDONLY = 1 << 0;
 
 constexpr uint64_t BTRFS_FEATURE_INCOMPAT_MIXED_BACKREF = 1 << 0;
 constexpr uint64_t BTRFS_FEATURE_INCOMPAT_DEFAULT_SUBVOL = 1 << 1;
