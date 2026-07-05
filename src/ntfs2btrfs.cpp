@@ -1098,6 +1098,7 @@ static void add_dev_item(root& chunk_root) {
 
 static void add_to_root_root(const root& r, root& root_root) {
     btrfs_root_item ri;
+    bool is_subvol = r.id == BTRFS_FS_TREE_OBJECTID || r.id >= 0x100;
 
     memset(&ri, 0, sizeof(btrfs_root_item));
 
@@ -1106,8 +1107,12 @@ static void add_to_root_root(const root& r, root& root_root) {
     ri.inode.size = 3;
     ri.inode.nlink = 1;
     ri.inode.mode = __S_IFDIR | S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+
+    if (is_subvol)
+        ri.inode.flags |= BTRFS_INODE_ROOT_ITEM_INIT;
+
     ri.generation = 1;
-    ri.root_dirid = (r.id == BTRFS_FS_TREE_OBJECTID || r.id >= 0x100) ? BTRFS_FIRST_FREE_OBJECTID : 0;
+    ri.root_dirid = is_subvol ? BTRFS_FIRST_FREE_OBJECTID : 0;
     ri.flags = r.readonly ? BTRFS_SUBVOL_READONLY : 0;
     ri.refs = 1;
     ri.generation_v2 = 1;
