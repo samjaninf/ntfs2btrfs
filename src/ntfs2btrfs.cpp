@@ -50,6 +50,7 @@
 
 import crc32c;
 import formatted_error;
+import compress;
 
 using namespace std;
 

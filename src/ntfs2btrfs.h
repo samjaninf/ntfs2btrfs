@@ -353,17 +353,6 @@ buffer_t lznt1_decompress(std::string_view compdata, uint32_t size);
 buffer_t do_lzx_decompress(std::string_view compdata, uint32_t size);
 buffer_t do_xpress_decompress(std::string_view compdata, uint32_t size, uint32_t chunk_size);
 
-// compress.cpp
-#ifdef WITH_ZLIB
-std::optional<buffer_t> zlib_compress(std::string_view data, uint32_t cluster_size);
-#endif
-#ifdef WITH_LZO
-std::optional<buffer_t> lzo_compress(std::string_view data, uint32_t cluster_size);
-#endif
-#ifdef WITH_ZSTD
-std::optional<buffer_t> zstd_compress(std::string_view data, uint32_t cluster_size);
-#endif
-
 // sha256.c
 extern "C" void calc_sha256(uint8_t* hash, const void* input, size_t len);
 

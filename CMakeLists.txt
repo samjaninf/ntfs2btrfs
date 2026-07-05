@@ -42,7 +42,6 @@ add_library(lzx STATIC
 set(SRC_FILES src/ntfs2btrfs.cpp
     src/ntfs.cpp
     src/decomp.cpp
-    src/compress.cpp
     src/rollback.cpp
     src/xxhash.c
     src/sha256.c
@@ -63,6 +62,7 @@ target_sources(ntfs2btrfs PUBLIC FILE_SET CXX_MODULES FILES
     src/crc32c.cpp
     src/buffer_t.cpp
     src/formatted_error.cpp
+    src/compress.cpp
 )
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
