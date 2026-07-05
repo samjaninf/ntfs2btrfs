@@ -125,8 +125,6 @@ struct data_alloc {
     bool not_in_img;
 };
 
-class ntfs;
-
 // from sys/stat.h
 #define __S_IFMT        0170000 /* These bits determine file type.  */
 #define __S_IFDIR       0040000 /* Directory.  */

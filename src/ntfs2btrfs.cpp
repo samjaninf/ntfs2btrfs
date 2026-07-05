@@ -15,7 +15,6 @@
  * You should have received a copy of the GNU General Public Licence
  * along with Ntfs2btrfs. If not, see <https://www.gnu.org/licenses/>. */
 
-#include "ntfs.h"
 #include "ntfs2btrfs.h"
 #include "xxhash.h"
 
@@ -56,6 +55,8 @@ import rollback;
 import sha256;
 import blake2b;
 import cxxbtrfs;
+import ntfs;
+import buffer_t;
 
 using namespace std;
 
