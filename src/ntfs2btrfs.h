@@ -348,9 +348,6 @@ struct std::formatter<enum btrfs_key_type> {
 static const uint64_t image_subvol_id = 0x100;
 static const char image_filename[] = "ntfs.img";
 
-// sha256.c
-extern "C" void calc_sha256(uint8_t* hash, const void* input, size_t len);
-
 // blake2b-ref.c
 extern "C" void blake2b(void *out, size_t outlen, const void* in, size_t inlen);
 

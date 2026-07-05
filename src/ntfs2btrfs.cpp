@@ -53,6 +53,7 @@ import formatted_error;
 import compress;
 import decomp;
 import rollback;
+import sha256;
 
 using namespace std;
 

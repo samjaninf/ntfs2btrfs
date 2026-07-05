@@ -1,5 +1,9 @@
+module;
+
 #include <stdint.h>
 #include <string.h>
+
+export module sha256;
 
 // Public domain code from https://github.com/amosnier/sha-2
 
@@ -51,7 +55,7 @@ static inline uint32_t right_rot(uint32_t value, unsigned int count)
 
 static void init_buf_state(struct buffer_state * state, const void * input, size_t len)
 {
-	state->p = input;
+	state->p = (uint8_t*)input;
 	state->len = len;
 	state->total_len = len;
 	state->single_one_delivered = 0;
@@ -123,7 +127,7 @@ static int calc_chunk(uint8_t chunk[CHUNK_SIZE], struct buffer_state * state)
  *   for bit string lengths that are not multiples of eight, and it really operates on arrays of bytes.
  *   In particular, the len parameter is a number of bytes.
  */
-void calc_sha256(uint8_t* hash, const void* input, size_t len)
+export void calc_sha256(uint8_t* hash, const void* input, size_t len)
 {
 	/*
 	 * Note 1: All integers (expect indexes) are 32-bit unsigned integers and addition is calculated modulo 2^32.
