@@ -32,6 +32,7 @@ import crc32c;
 import formatted_error;
 import buffer_t;
 import cxxbtrfs;
+import win32;
 
 using namespace std;
 

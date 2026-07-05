@@ -66,6 +66,7 @@ target_sources(ntfs2btrfs PUBLIC FILE_SET CXX_MODULES FILES
     src/cxxbtrfs.cpp
     src/ntfs.cpp
     src/unicode.cpp
+    src/win32.cpp
 )
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
