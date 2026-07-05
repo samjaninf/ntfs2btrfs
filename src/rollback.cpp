@@ -22,6 +22,7 @@
 #include <codecvt>
 
 import crc32c;
+import formatted_error;
 
 using namespace std;
 

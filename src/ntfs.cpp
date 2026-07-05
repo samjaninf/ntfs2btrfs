@@ -30,6 +30,8 @@
 #include <unistd.h>
 #endif
 
+import formatted_error;
+
 using namespace std;
 
 static void process_fixups(MULTI_SECTOR_HEADER* header, uint64_t length, unsigned int sector_size) {

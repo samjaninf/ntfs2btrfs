@@ -18,6 +18,8 @@
 #include "ntfs2btrfs.h"
 #include "ebiggers/system_compression.h"
 
+import formatted_error;
+
 #define LZX_CHUNK_SIZE 32768
 
 using namespace std;

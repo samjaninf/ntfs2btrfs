@@ -29,6 +29,8 @@
 #include <zstd.h>
 #endif
 
+import formatted_error;
+
 using namespace std;
 
 #ifdef WITH_ZLIB
