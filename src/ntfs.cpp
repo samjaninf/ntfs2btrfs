@@ -462,15 +462,15 @@ export struct mapping {
 export class ntfs_file {
 public:
     ntfs_file(ntfs& dev, uint64_t inode);
-    buffer_t read(uint64_t offset = 0, uint32_t length = 0, enum ntfs_attribute type = ntfs_attribute::DATA, std::u16string_view name = u"");
-    std::list<mapping> read_mappings(enum ntfs_attribute type = ntfs_attribute::DATA, std::u16string_view name = u"");
+    buffer_t read(uint64_t offset = 0, uint32_t length = 0, enum ntfs_attribute type = ntfs_attribute::DATA, u16string_view name = u"");
+    list<mapping> read_mappings(enum ntfs_attribute type = ntfs_attribute::DATA, u16string_view name = u"");
 
     bool is_directory() const {
         return file_record->Flags & FILE_RECORD_IS_DIRECTORY;
     }
 
-    void loop_through_atts(const std::function<bool(const ATTRIBUTE_RECORD_HEADER&, std::string_view, std::u16string_view)>& func);
-    std::string get_filename();
+    void loop_through_atts(const function<bool(const ATTRIBUTE_RECORD_HEADER&, string_view, u16string_view)>& func);
+    string get_filename();
 
     FILE_RECORD_SEGMENT_HEADER* file_record;
 
@@ -484,7 +484,7 @@ private:
 
 export class ntfs {
 public:
-    ntfs(const std::string& fn);
+    ntfs(const string& fn);
 
     ~ntfs() {
 #ifdef _WIN32
@@ -496,13 +496,13 @@ public:
 
     void read(uint64_t offset, uint8_t* buf, size_t length);
     void write(uint64_t offset, const uint8_t* buf, size_t length);
-    std::string_view find_sd(uint32_t id, ntfs_file& secure);
+    string_view find_sd(uint32_t id, ntfs_file& secure);
 
-    std::unique_ptr<ntfs_file> mft;
+    unique_ptr<ntfs_file> mft;
     buffer_t boot_sector_buf;
     NTFS_BOOT_SECTOR* boot_sector = nullptr;
     uint64_t file_record_size;
-    std::map<uint32_t, buffer_t> sd_list;
+    map<uint32_t, buffer_t> sd_list;
 
 #ifdef _WIN32
     HANDLE h;
