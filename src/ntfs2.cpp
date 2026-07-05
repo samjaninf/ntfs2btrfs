@@ -32,6 +32,8 @@ module;
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#else
+#include <windows.h>
 #endif
 
 module ntfs;

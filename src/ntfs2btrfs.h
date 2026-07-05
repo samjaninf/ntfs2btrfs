@@ -27,10 +27,6 @@
 #include <format>
 #include <memory>
 
-#ifdef _WIN32
-#include <windows.h>
-#endif
-
 #ifdef _MSC_VER
 
 #ifdef _M_IX86

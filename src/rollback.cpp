@@ -26,6 +26,10 @@ module;
 #include <map>
 #include <string.h>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 export module rollback;
 
 import crc32c;
