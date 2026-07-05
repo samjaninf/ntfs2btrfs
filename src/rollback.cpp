@@ -20,6 +20,7 @@
 #include <fstream>
 #include <functional>
 #include <codecvt>
+#include <print>
 
 import crc32c;
 import formatted_error;
@@ -318,17 +319,17 @@ void btrfs::read_chunks() {
 
 #if 0
     for (const auto& c : chunks) {
-        fmt::print("{:x}\n", c.first);
+        print("{:x}\n", c.first);
 
         const auto& ci = *(CHUNK_ITEM*)c.second.data();
 
-        fmt::print("  size {:x}, root_id {:x}, stripe_length {:x}, type {:x}, opt_io_alignment {:x}, opt_io_width {:x}, sector_size {:x}, num_stripes {:x}, sub_stripes {:x}\n",
-                   ci.size, ci.root_id, ci.stripe_length, ci.type, ci.opt_io_alignment, ci.opt_io_width, ci.sector_size, ci.num_stripes, ci.sub_stripes);
+        print("  size {:x}, root_id {:x}, stripe_length {:x}, type {:x}, opt_io_alignment {:x}, opt_io_width {:x}, sector_size {:x}, num_stripes {:x}, sub_stripes {:x}\n",
+              ci.size, ci.root_id, ci.stripe_length, ci.type, ci.opt_io_alignment, ci.opt_io_width, ci.sector_size, ci.num_stripes, ci.sub_stripes);
 
         auto* cis = (CHUNK_ITEM_STRIPE*)(&ci + 1);
 
         for (unsigned int i = 0; i < ci.num_stripes; i++) {
-            fmt::print("  dev_id {:x}, offset {:x}\n", cis[i].dev_id, cis[i].offset);
+            print("  dev_id {:x}, offset {:x}\n", cis[i].dev_id, cis[i].offset);
         }
     }
 #endif
@@ -475,5 +476,5 @@ void rollback(const string& fn) {
 
     // FIXME - TRIM?
 
-    fmt::print("Device successfully rolled back to NTFS.\n");
+    print("Device successfully rolled back to NTFS.\n");
 }

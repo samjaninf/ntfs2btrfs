@@ -17,7 +17,6 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/ntfs2btrfs.8.in ${CMAKE_CURRENT_BINAR
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(fmt REQUIRED)
 find_package(PkgConfig REQUIRED)
 
 if(WITH_ZLIB)
@@ -70,7 +69,6 @@ if(CMAKE_BUILD_TYPE MATCHES "Debug")
     add_definitions(-D_GLIBCXX_DEBUG)
 endif()
 
-target_link_libraries(ntfs2btrfs fmt::fmt-header-only)
 target_link_libraries(ntfs2btrfs lzx)
 
 if(WITH_ZLIB)

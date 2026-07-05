@@ -34,6 +34,7 @@
 #include <locale>
 #include <span>
 #include <optional>
+#include <print>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -2019,7 +2020,7 @@ static void clear_line() {
         SetConsoleCursorPosition(console, { 0, csbi.dwCursorPosition.Y });
     }
 #else
-    fmt::print("\33[2K");
+    print("\33[2K");
     fflush(stdout);
 #endif
 }
@@ -2110,11 +2111,11 @@ static void add_inode(root& r, uint64_t inode, uint64_t ntfs_inode, bool& is_dir
 
     is_dir = f.is_directory();
 
-    auto add_warning = [&]<typename... Args>(fmt::format_string<Args...> s, Args&&... args) {
+    auto add_warning = [&]<typename... Args>(format_string<Args...> s, Args&&... args) {
         if (filename.empty())
             filename = f.get_filename();
 
-        warnings.emplace_back(filename + ": " + fmt::format(s, forward<Args>(args)...));
+        warnings.emplace_back(filename + ": " + format(s, forward<Args>(args)...));
     };
 
     f.loop_through_atts([&](const ATTRIBUTE_RECORD_HEADER& att, string_view res_data, u16string_view name) -> bool {
@@ -2135,7 +2136,7 @@ static void add_inode(root& r, uint64_t inode, uint64_t ntfs_inode, bool& is_dir
                         if (filename.empty())
                             filename = f.get_filename();
 
-                        fmt::print(stderr, "Skipping encrypted inode {:x} ({})\n", inode - inode_offset, filename);
+                        print(stderr, "Skipping encrypted inode {:x} ({})\n", inode - inode_offset, filename);
                         skipping = true;
                         return true;
                     }
@@ -2758,7 +2759,7 @@ static void add_inode(root& r, uint64_t inode, uint64_t ntfs_inode, bool& is_dir
     }
 
     for (const auto& w : warnings) {
-        fmt::print(stderr, "{}\n", w);
+        print(stderr, "{}\n", w);
     }
 
 #undef add_warning
@@ -2809,7 +2810,7 @@ static void add_inode(root& r, uint64_t inode, uint64_t ntfs_inode, bool& is_dir
             if (filename.empty())
                 filename = f.get_filename();
 
-            fmt::print(stderr, "Could not find SecurityId {} ({})\n", si.SecurityId, filename);
+            print(stderr, "Could not find SecurityId {} ({})\n", si.SecurityId, filename);
         } else {
             sd.resize(sv.size());
             memcpy(sd.data(), sv.data(), sv.size());
@@ -2886,7 +2887,7 @@ static void add_inode(root& r, uint64_t inode, uint64_t ntfs_inode, bool& is_dir
             if (filename.empty())
                 filename = f.get_filename();
 
-            fmt::print(stderr, "{}: {}\n", filename, e.what());
+            print(stderr, "{}: {}\n", filename, e.what());
         }
     }
 
@@ -3243,7 +3244,7 @@ static void create_inodes(root& r, const buffer_t& mftbmp, ntfs& dev, runs_t& ru
         }
 
         num++;
-        fmt::print("Processing inode {} / {} ({:1.1f}%)\r", num, total, (float)num * 100.0f / (float)total);
+        print("Processing inode {} / {} ({:1.1f}%)\r", num, total, (float)num * 100.0f / (float)total);
         fflush(stdout);
 
         if (run.length == 1)
@@ -3254,7 +3255,7 @@ static void create_inodes(root& r, const buffer_t& mftbmp, ntfs& dev, runs_t& ru
         }
     }
 
-    fmt::print("\n");
+    print("\n");
 }
 
 static uint64_t get_extent_data_ref_hash2(uint64_t root, uint64_t objid, uint64_t offset) {
@@ -3483,7 +3484,7 @@ static void calc_checksums(root& csum_root, runs_t runs, ntfs& dev, enum btrfs_c
             num++;
 
             if (num % 1000 == 0 || num == total) {
-                fmt::print("Calculating checksums {} / {} ({:1.1f}%)\r", num, total, (float)num * 100.0f / (float)total);
+                print("Calculating checksums {} / {} ({:1.1f}%)\r", num, total, (float)num * 100.0f / (float)total);
                 fflush(stdout);
             }
         };
@@ -3553,7 +3554,7 @@ static void calc_checksums(root& csum_root, runs_t runs, ntfs& dev, enum btrfs_c
         add_item(csum_root, BTRFS_EXTENT_CSUM_OBJECTID, btrfs_key_type::EXTENT_CSUM, (r.offset * cluster_size) + chunk_virt_offset, &csums[0], (uint16_t)(r.length * cluster_size * csum_size / sector_size));
     }
 
-    fmt::print("\n");
+    print("\n");
 }
 
 static void protect_cluster(ntfs& dev, runs_t& runs, uint64_t cluster) {
@@ -3825,9 +3826,9 @@ static void convert(ntfs& dev, btrfs_compression_type compression,
         create_inodes(fstree_root, mftbmp, dev, runs, secure, compression, nocsum);
     }
 
-    fmt::print("Mapped {} inodes directly.\n", mapped_inodes);
-    fmt::print("Rewrote {} inodes.\n", rewritten_inodes);
-    fmt::print("Inlined {} inodes.\n", inline_inodes);
+    print("Mapped {} inodes directly.\n", mapped_inodes);
+    print("Rewrote {} inodes.\n", rewritten_inodes);
+    print("Inlined {} inodes.\n", inline_inodes);
 
     create_image(image_subvol, dev, runs, image_inode, nocsum);
 
@@ -3837,7 +3838,7 @@ static void convert(ntfs& dev, btrfs_compression_type compression,
     create_data_extent_items(extent_root, runs, dev.boot_sector->BytesPerSector * dev.boot_sector->SectorsPerCluster,
                              image_subvol.id, image_inode);
 
-    fmt::print("Updating directory sizes\n");
+    print("Updating directory sizes\n");
 
     for (auto& r : roots) {
         if (!r.dir_size.empty())
@@ -3966,12 +3967,12 @@ int main(int argc, char* argv[]) {
         auto args = read_args(argc, argv);
 
         if (args.size() == 2 && args[1] == "--version") {
-            fmt::print("ntfs2btrfs " PROJECT_VER "\n");
+            print("ntfs2btrfs " PROJECT_VER "\n");
             return 1;
         }
 
         if (args.size() < 2 || (args.size() == 2 && (args[1] == "--help" || args[1] == "/?"))) {
-            fmt::print(R"(Usage: ntfs2btrfs [OPTION]... device
+            print(R"(Usage: ntfs2btrfs [OPTION]... device
 Convert an NTFS filesystem to Btrfs.
 
   -c, --compress=ALGO        recompress compressed files; ALGO can be 'zlib',
@@ -4050,7 +4051,7 @@ Convert an NTFS filesystem to Btrfs.
 
         if (nocsum && compression != btrfs_compression_type::none) {
             compression = btrfs_compression_type::none;
-            fmt::print("Disabling compression as it requires checksums to be enabled.\n");
+            print("Disabling compression as it requires checksums to be enabled.\n");
         } else {
 #ifndef WITH_ZLIB
             if (compression == btrfs_compression_type::zlib)
@@ -4069,43 +4070,43 @@ Convert an NTFS filesystem to Btrfs.
 
             switch (compression) {
                 case btrfs_compression_type::zlib:
-                    fmt::print("Using Zlib compression.\n");
+                    print("Using Zlib compression.\n");
                     break;
 
                 case btrfs_compression_type::lzo:
-                    fmt::print("Using LZO compression.\n");
+                    print("Using LZO compression.\n");
                     break;
 
                 case btrfs_compression_type::zstd:
-                    fmt::print("Using Zstd compression.\n");
+                    print("Using Zstd compression.\n");
                     break;
 
                 case btrfs_compression_type::none:
-                    fmt::print("Not using compression.\n");
+                    print("Not using compression.\n");
                     break;
             }
         }
 
         switch (csum_type) {
             case btrfs_csum_type::crc32c:
-                fmt::print("Using CRC32C for checksums.\n");
+                print("Using CRC32C for checksums.\n");
                 break;
 
             case btrfs_csum_type::xxhash:
-                fmt::print("Using xxHash for checksums.\n");
+                print("Using xxHash for checksums.\n");
                 break;
 
             case btrfs_csum_type::sha256:
-                fmt::print("Using SHA256 for checksums.\n");
+                print("Using SHA256 for checksums.\n");
                 break;
 
             case btrfs_csum_type::blake2:
-                fmt::print("Using Blake2 for checksums.\n");
+                print("Using Blake2 for checksums.\n");
                 break;
         }
 
         if (nocsum)
-            fmt::print("Not calculating checksums.\n");
+            print("Not calculating checksums.\n");
 
         ntfs dev(fn);
 
