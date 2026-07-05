@@ -1001,16 +1001,16 @@ static void write_superblocks(ntfs& dev, root& chunk_root, root& root_root,
     sb.stripesize = sector_size;
     sb.sys_chunk_array_size = sys_chunk_size;
     sb.chunk_root_generation = 1;
-    sb.incompat_flags = BTRFS_INCOMPAT_FLAGS_MIXED_BACKREF | BTRFS_INCOMPAT_FLAGS_BIG_METADATA | BTRFS_INCOMPAT_FLAGS_EXTENDED_IREF |
-                        BTRFS_INCOMPAT_FLAGS_SKINNY_METADATA | BTRFS_INCOMPAT_FLAGS_NO_HOLES;
+    sb.incompat_flags = BTRFS_FEATURE_INCOMPAT_MIXED_BACKREF | BTRFS_FEATURE_INCOMPAT_BIG_METADATA | BTRFS_FEATURE_INCOMPAT_EXTENDED_IREF |
+                        BTRFS_FEATURE_INCOMPAT_SKINNY_METADATA | BTRFS_FEATURE_INCOMPAT_NO_HOLES;
     sb.csum_type = csum_type;
     sb.root_level = root_root.level;
     sb.chunk_root_level = chunk_root.level;
 
     if (compression == btrfs_compression_type::lzo)
-        sb.incompat_flags |= BTRFS_INCOMPAT_FLAGS_COMPRESS_LZO;
+        sb.incompat_flags |= BTRFS_FEATURE_INCOMPAT_COMPRESS_LZO;
     else if (compression == btrfs_compression_type::zstd)
-        sb.incompat_flags |= BTRFS_INCOMPAT_FLAGS_COMPRESS_ZSTD;
+        sb.incompat_flags |= BTRFS_FEATURE_INCOMPAT_COMPRESS_ZSTD;
 
     set_volume_label(sb, dev);
 
