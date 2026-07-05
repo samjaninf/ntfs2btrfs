@@ -55,8 +55,29 @@ import decomp;
 import rollback;
 import sha256;
 import blake2b;
+import cxxbtrfs;
 
 using namespace std;
+
+class root {
+public:
+    root(uint64_t id) : id(id) { }
+
+    void create_trees(root& extent_root, enum btrfs_csum_type csum_type);
+    void write_trees(ntfs& dev);
+
+    uint64_t id;
+    map<btrfs_key, buffer_t> items;
+    list<buffer_t> trees;
+    uint64_t tree_addr;
+    uint8_t level;
+    uint64_t metadata_size = 0;
+    list<pair<uint64_t, uint8_t>> addresses, old_addresses;
+    bool allocations_done = false;
+    bool readonly = false;
+    map<uint64_t, uint64_t> dir_seqs;
+    map<uint64_t, uint64_t> dir_size;
+};
 
 static list<chunk> chunks;
 static list<root> roots;
@@ -98,6 +119,29 @@ static constexpr char chunk_error_message[] = "Could not find enough space to cr
 
 #define EA_CAP "security.capability"
 #define EA_CAP_HASH 0x7c3650b1
+
+#pragma pack(push,1)
+
+typedef struct {
+    btrfs_extent_item extent_item;
+    btrfs_extent_inline_ref eir;
+} metadata_item;
+
+typedef struct {
+    btrfs_extent_item extent_item;
+    btrfs_key_type type;
+    btrfs_extent_data_ref edr;
+} data_item;
+
+typedef struct {
+    btrfs_extent_item extent_item;
+    btrfs_key_type type1;
+    btrfs_extent_data_ref edr1;
+    btrfs_key_type type2;
+    btrfs_extent_data_ref edr2;
+} data_item2;
+
+#pragma pack(pop)
 
 using runs_t = map<uint64_t, list<data_alloc>>;
 

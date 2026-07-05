@@ -40,9 +40,6 @@
 
 #endif
 
-import buffer_t;
-import cxxbtrfs;
-
 #ifdef _WIN32
 class last_error : public std::exception {
 public:
@@ -128,44 +125,7 @@ struct data_alloc {
     bool not_in_img;
 };
 
-static bool inline operator<(const btrfs_key& a, const btrfs_key& b) {
-    if (a.objectid < b.objectid)
-        return true;
-    else if (a.objectid > b.objectid)
-        return false;
-
-    if (a.type < b.type)
-        return true;
-    else if (a.type > b.type)
-        return false;
-
-    if (a.offset < b.offset)
-        return true;
-
-    return false;
-}
-
 class ntfs;
-
-class root {
-public:
-    root(uint64_t id) : id(id) { }
-
-    void create_trees(root& extent_root, enum btrfs_csum_type csum_type);
-    void write_trees(ntfs& dev);
-
-    uint64_t id;
-    std::map<btrfs_key, buffer_t> items;
-    std::list<buffer_t> trees;
-    uint64_t tree_addr;
-    uint8_t level;
-    uint64_t metadata_size = 0;
-    std::list<std::pair<uint64_t, uint8_t>> addresses, old_addresses;
-    bool allocations_done = false;
-    bool readonly = false;
-    std::map<uint64_t, uint64_t> dir_seqs;
-    std::map<uint64_t, uint64_t> dir_size;
-};
 
 // from sys/stat.h
 #define __S_IFMT        0170000 /* These bits determine file type.  */
@@ -229,29 +189,6 @@ public:
 #ifndef S_ISVTX
 #define S_ISVTX 0001000
 #endif
-
-#pragma pack(push,1)
-
-typedef struct {
-    btrfs_extent_item extent_item;
-    btrfs_extent_inline_ref eir;
-} metadata_item;
-
-typedef struct {
-    btrfs_extent_item extent_item;
-    btrfs_key_type type;
-    btrfs_extent_data_ref edr;
-} data_item;
-
-typedef struct {
-    btrfs_extent_item extent_item;
-    btrfs_key_type type1;
-    btrfs_extent_data_ref edr1;
-    btrfs_key_type type2;
-    btrfs_extent_data_ref edr2;
-} data_item2;
-
-#pragma pack(pop)
 
 struct relocation {
     relocation(uint64_t old_start, uint64_t length, uint64_t new_start) : old_start(old_start), length(length), new_start(new_start) { }

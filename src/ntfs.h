@@ -31,6 +31,8 @@
 #include <unistd.h>
 #endif
 
+import buffer_t;
+
 #pragma pack(push,1)
 
 typedef struct {

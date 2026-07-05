@@ -20,8 +20,11 @@ module;
 #include <stdint.h>
 #include <array>
 #include <format>
+#include <compare>
 
 export module cxxbtrfs;
+
+using namespace std;
 
 using le64 = uint64_t;
 using le32 = uint32_t;
@@ -155,6 +158,22 @@ struct btrfs_key {
     uint64_t objectid;
     btrfs_key_type type;
     uint64_t offset;
+
+    bool operator==(const btrfs_key& k) const = default;
+
+    strong_ordering operator<=>(const btrfs_key& k) const {
+        auto cmp = objectid <=> k.objectid;
+
+        if (cmp != strong_ordering::equal)
+            return cmp;
+
+        cmp = type <=> k.type;
+
+        if (cmp != strong_ordering::equal)
+            return cmp;
+
+        return offset <=> k.offset;
+    }
 } __attribute__((packed));
 
 constexpr uint64_t BTRFS_HEADER_FLAG_WRITTEN = 1 << 0;
@@ -266,7 +285,7 @@ struct btrfs_super_block {
     le64 remap_root_generation;
     uint8_t remap_root_level;
     uint8_t reserved[199];
-    std::array<uint8_t, 0x800> sys_chunk_array;
+    array<uint8_t, 0x800> sys_chunk_array;
     btrfs_root_backup super_roots[4];
     uint8_t padding[565];
 } __attribute__((packed));
