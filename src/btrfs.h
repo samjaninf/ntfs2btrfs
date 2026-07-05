@@ -125,8 +125,6 @@ enum class btrfs_csum_type : uint16_t {
     blake2 = 3
 };
 
-#pragma pack(push, 1)
-
 struct btrfs_uuid {
     uint8_t uuid[16];
 } __attribute__((packed));
@@ -185,69 +183,74 @@ struct btrfs_dev_item {
 #define SYS_CHUNK_ARRAY_SIZE 0x800
 #define BTRFS_NUM_BACKUP_ROOTS 4
 
-typedef struct {
-    uint64_t root_tree_addr;
-    uint64_t root_tree_generation;
-    uint64_t chunk_tree_addr;
-    uint64_t chunk_tree_generation;
-    uint64_t extent_tree_addr;
-    uint64_t extent_tree_generation;
-    uint64_t fs_tree_addr;
-    uint64_t fs_tree_generation;
-    uint64_t dev_root_addr;
-    uint64_t dev_root_generation;
-    uint64_t csum_root_addr;
-    uint64_t csum_root_generation;
-    uint64_t total_bytes;
-    uint64_t bytes_used;
-    uint64_t num_devices;
-    uint64_t reserved[4];
-    uint8_t root_level;
+struct btrfs_root_backup {
+    le64 tree_root;
+    le64 tree_root_gen;
+    le64 chunk_root;
+    le64 chunk_root_gen;
+    le64 extent_root;
+    le64 extent_root_gen;
+    le64 fs_root;
+    le64 fs_root_gen;
+    le64 dev_root;
+    le64 dev_root_gen;
+    le64 csum_root;
+    le64 csum_root_gen;
+    le64 total_bytes;
+    le64 bytes_used;
+    le64 num_devices;
+    le64 unused_64[4];
+    uint8_t tree_root_level;
     uint8_t chunk_root_level;
     uint8_t extent_root_level;
     uint8_t fs_root_level;
     uint8_t dev_root_level;
     uint8_t csum_root_level;
-    uint8_t reserved2[10];
-} superblock_backup;
+    uint8_t unused_8[10];
+} __attribute__((packed));
 
-typedef struct {
-    uint8_t checksum[32];
-    btrfs_uuid uuid;
-    uint64_t sb_phys_addr;
-    uint64_t flags;
-    uint64_t magic;
-    uint64_t generation;
-    uint64_t root_tree_addr;
-    uint64_t chunk_tree_addr;
-    uint64_t log_tree_addr;
-    uint64_t log_root_transid;
-    uint64_t total_bytes;
-    uint64_t bytes_used;
-    uint64_t root_dir_objectid;
-    uint64_t num_devices;
-    uint32_t sector_size;
-    uint32_t node_size;
-    uint32_t leaf_size;
-    uint32_t stripe_size;
-    uint32_t n;
-    uint64_t chunk_root_generation;
-    uint64_t compat_flags;
-    uint64_t compat_ro_flags;
-    uint64_t incompat_flags;
-    enum btrfs_csum_type csum_type;
+struct btrfs_super_block {
+    uint8_t csum[32];
+    btrfs_uuid fsid;
+    le64 bytenr;
+    le64 flags;
+    le64 magic;
+    le64 generation;
+    le64 root;
+    le64 chunk_root;
+    le64 log_root;
+    le64 __unused_log_root_transid;
+    le64 total_bytes;
+    le64 bytes_used;
+    le64 root_dir_objectid;
+    le64 num_devices;
+    le32 sectorsize;
+    le32 nodesize;
+    le32 __unused_leafsize;
+    le32 stripesize;
+    le32 sys_chunk_array_size;
+    le64 chunk_root_generation;
+    le64 compat_flags;
+    le64 compat_ro_flags;
+    le64 incompat_flags;
+    btrfs_csum_type csum_type;
     uint8_t root_level;
     uint8_t chunk_root_level;
     uint8_t log_root_level;
     btrfs_dev_item dev_item;
-    char label[MAX_LABEL_SIZE];
-    uint64_t cache_generation;
-    uint64_t uuid_tree_generation;
-    uint64_t reserved[30];
-    uint8_t sys_chunk_array[SYS_CHUNK_ARRAY_SIZE];
-    superblock_backup backup[BTRFS_NUM_BACKUP_ROOTS];
-    uint8_t reserved2[565];
-} superblock;
+    char label[0x100];
+    le64 cache_generation;
+    le64 uuid_tree_generation;
+    btrfs_uuid metadata_uuid;
+    le64 nr_global_roots;
+    le64 remap_root;
+    le64 remap_root_generation;
+    uint8_t remap_root_level;
+    uint8_t reserved[199];
+    uint8_t sys_chunk_array[0x800];
+    btrfs_root_backup super_roots[4];
+    uint8_t padding[565];
+} __attribute__((packed));
 
 enum class btrfs_dir_item_type : uint8_t {
     unknown = 0,
@@ -400,5 +403,3 @@ struct btrfs_dev_extent {
     le64 length;
     btrfs_uuid chunk_tree_uuid;
 } __attribute__ ((__packed__));
-
-#pragma pack(pop)

@@ -41,7 +41,7 @@ public:
     void raw_write(uint64_t phys_addr, const buffer_t& buf);
 
 private:
-    superblock read_superblock();
+    btrfs_super_block read_superblock();
     void read_chunks();
     buffer_t read(uint64_t addr, uint32_t len);
 
@@ -51,7 +51,7 @@ private:
 #else
     fstream f;
 #endif
-    superblock sb;
+    btrfs_super_block sb;
     chunks_t chunks;
 };
 
@@ -91,8 +91,8 @@ btrfs::btrfs(const string& fn) {
     read_chunks();
 }
 
-superblock btrfs::read_superblock() {
-    optional<superblock> sb;
+btrfs_super_block btrfs::read_superblock() {
+    optional<btrfs_super_block> sb;
     uint64_t device_size;
 
     // find length of volume
@@ -124,10 +124,10 @@ superblock btrfs::read_superblock() {
 #endif
 
     unsigned int i = 0;
-    while (superblock_addrs[i] != 0 && superblock_addrs[i] + sizeof(superblock) < device_size) {
-        auto buf = raw_read(superblock_addrs[i], sizeof(superblock));
+    while (superblock_addrs[i] != 0 && superblock_addrs[i] + sizeof(btrfs_super_block) < device_size) {
+        auto buf = raw_read(superblock_addrs[i], sizeof(btrfs_super_block));
 
-        const auto& sb2 = *(superblock*)buf.data();
+        const auto& sb2 = *(btrfs_super_block*)buf.data();
 
         if (sb2.magic != BTRFS_MAGIC) {
             i++;
@@ -258,7 +258,7 @@ buffer_t btrfs::read(uint64_t addr, uint32_t len) {
 }
 
 bool btrfs::walk_tree(uint64_t addr, const function<bool(const btrfs_key&, string_view)>& func) {
-    auto tree = read(addr, sb.node_size);
+    auto tree = read(addr, sb.nodesize);
 
     // FIXME - check checksum
 
@@ -333,7 +333,7 @@ void btrfs::read_chunks() {
 
     chunks_t chunks2;
 
-    walk_tree(sb.chunk_tree_addr, [&](const btrfs_key& key, string_view data) {
+    walk_tree(sb.chunk_root, [&](const btrfs_key& key, string_view data) {
         if (key.type != btrfs_key_type::CHUNK_ITEM)
             return true;
 
@@ -348,7 +348,7 @@ void btrfs::read_chunks() {
 uint64_t btrfs::find_root_addr(uint64_t root) {
     optional<uint64_t> ret;
 
-    walk_tree(sb.root_tree_addr, [&](const btrfs_key& key, string_view data) {
+    walk_tree(sb.root, [&](const btrfs_key& key, string_view data) {
         if (key.objectid != root || key.type != btrfs_key_type::ROOT_ITEM)
             return true;
 

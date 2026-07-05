@@ -918,7 +918,7 @@ void root::write_trees(ntfs& dev) {
     }
 }
 
-static void set_volume_label(superblock& sb, ntfs& dev) {
+static void set_volume_label(btrfs_super_block& sb, ntfs& dev) {
     try {
         ntfs_file vol_file(dev, NTFS_VOLUME_INODE);
 
@@ -956,12 +956,12 @@ static void write_superblocks(ntfs& dev, root& chunk_root, root& root_root,
                               btrfs_compression_type compression,
                               enum btrfs_csum_type csum_type) {
     uint32_t sector_size = 0x1000; // FIXME
-    buffer_t buf((size_t)sector_align(sizeof(superblock), sector_size));
+    buffer_t buf((size_t)sector_align(sizeof(btrfs_super_block), sector_size));
     unsigned int i;
     uint32_t sys_chunk_size;
     uint64_t total_used;
 
-    auto& sb = *(superblock*)buf.data();
+    auto& sb = *(btrfs_super_block*)buf.data();
 
     memset(buf.data(), 0, buf.size());
 
@@ -986,20 +986,20 @@ static void write_superblocks(ntfs& dev, root& chunk_root, root& root_root,
         total_used += c.used;
     }
 
-    sb.uuid = fs_uuid;
+    sb.fsid = fs_uuid;
     sb.magic = BTRFS_MAGIC;
     sb.generation = 1;
-    sb.root_tree_addr = root_root.tree_addr;
-    sb.chunk_tree_addr = chunk_root.tree_addr;
+    sb.root = root_root.tree_addr;
+    sb.chunk_root = chunk_root.tree_addr;
     sb.total_bytes = device_size;
     sb.bytes_used = total_used;
     sb.root_dir_objectid = BTRFS_ROOT_TREEDIR;
     sb.num_devices = 1;
-    sb.sector_size = sector_size;
-    sb.node_size = tree_size;
-    sb.leaf_size = tree_size;
-    sb.stripe_size = sector_size;
-    sb.n = sys_chunk_size;
+    sb.sectorsize = sector_size;
+    sb.nodesize = tree_size;
+    sb.__unused_leafsize = tree_size;
+    sb.stripesize = sector_size;
+    sb.sys_chunk_array_size = sys_chunk_size;
     sb.chunk_root_generation = 1;
     sb.incompat_flags = BTRFS_INCOMPAT_FLAGS_MIXED_BACKREF | BTRFS_INCOMPAT_FLAGS_BIG_METADATA | BTRFS_INCOMPAT_FLAGS_EXTENDED_IREF |
                         BTRFS_INCOMPAT_FLAGS_SKINNY_METADATA | BTRFS_INCOMPAT_FLAGS_NO_HOLES;
@@ -1050,23 +1050,23 @@ static void write_superblocks(ntfs& dev, root& chunk_root, root& root_root,
         if (superblock_addrs[i] > device_size - buf.size())
             return;
 
-        sb.sb_phys_addr = superblock_addrs[i];
+        sb.bytenr = superblock_addrs[i];
 
         switch (csum_type) {
             case btrfs_csum_type::crc32c:
-                *(uint32_t*)sb.checksum = ~calc_crc32c(0xffffffff, (uint8_t*)&sb.uuid, sizeof(superblock) - sizeof(sb.checksum));
+                *(uint32_t*)sb.csum = ~calc_crc32c(0xffffffff, (uint8_t*)&sb.fsid, sizeof(btrfs_super_block) - sizeof(sb.csum));
                 break;
 
             case btrfs_csum_type::xxhash:
-                *(uint64_t*)sb.checksum = XXH64(&sb.uuid, sizeof(superblock) - sizeof(sb.checksum), 0);
+                *(uint64_t*)sb.csum = XXH64(&sb.fsid, sizeof(btrfs_super_block) - sizeof(sb.csum), 0);
                 break;
 
             case btrfs_csum_type::sha256:
-                calc_sha256((uint8_t*)&sb, &sb.uuid, sizeof(superblock) - sizeof(sb.checksum));
+                calc_sha256((uint8_t*)&sb, &sb.fsid, sizeof(btrfs_super_block) - sizeof(sb.csum));
                 break;
 
             case btrfs_csum_type::blake2:
-                blake2b(&sb, 32, &sb.uuid, sizeof(superblock) - sizeof(sb.checksum));
+                blake2b(&sb, 32, &sb.fsid, sizeof(btrfs_super_block) - sizeof(sb.csum));
                 break;
 
             default:
@@ -3600,7 +3600,7 @@ static void protect_superblocks(ntfs& dev, runs_t& runs) {
 
     unsigned int i = 0;
     while (superblock_addrs[i] != 0) {
-        if (superblock_addrs[i] > device_size - sizeof(superblock))
+        if (superblock_addrs[i] > device_size - sizeof(btrfs_super_block))
             break;
 
         uint64_t cluster_start = (superblock_addrs[i] - (superblock_addrs[i] % stripe_length)) / cluster_size;
