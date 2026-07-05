@@ -492,7 +492,7 @@ static void add_chunk(root& chunk_root, root& devtree_root, root& extent_root, c
     memset(&ci1s, 0, sizeof(btrfs_chunk));
 
     ci1s.length = c.length;
-    ci1s.owner = BTRFS_ROOT_EXTENT;
+    ci1s.owner = BTRFS_EXTENT_TREE_OBJECTID;
     ci1s.stripe_len = 0x10000;
     ci1s.type = c.type;
     ci1s.io_align = 0x10000;
@@ -506,7 +506,7 @@ static void add_chunk(root& chunk_root, root& devtree_root, root& extent_root, c
 
     add_item(chunk_root, 0x100, btrfs_key_type::CHUNK_ITEM, c.offset, &ci1s, sizeof(ci1s));
 
-    de.chunk_tree = BTRFS_ROOT_CHUNK;
+    de.chunk_tree = BTRFS_CHUNK_TREE_OBJECTID;
     de.chunk_objectid = 0x100;
     de.chunk_offset = c.offset;
     de.length = c.length;
@@ -522,7 +522,7 @@ static void add_chunk(root& chunk_root, root& devtree_root, root& extent_root, c
 }
 
 static uint64_t allocate_metadata(uint64_t r, root& extent_root, uint8_t level) {
-    bool system_chunk = r == BTRFS_ROOT_CHUNK;
+    bool system_chunk = r == BTRFS_CHUNK_TREE_OBJECTID;
     uint64_t chunk_size, disk_offset;
     bool found = false;
     metadata_item mi;
@@ -993,7 +993,7 @@ static void write_superblocks(ntfs& dev, root& chunk_root, root& root_root,
     sb.chunk_root = chunk_root.tree_addr;
     sb.total_bytes = device_size;
     sb.bytes_used = total_used;
-    sb.root_dir_objectid = BTRFS_ROOT_TREEDIR;
+    sb.root_dir_objectid = BTRFS_ROOT_TREE_DIR_OBJECTID;
     sb.num_devices = 1;
     sb.sectorsize = sector_size;
     sb.nodesize = tree_size;
@@ -1107,7 +1107,7 @@ static void add_to_root_root(const root& r, root& root_root) {
     ri.inode.nlink = 1;
     ri.inode.mode = __S_IFDIR | S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
     ri.generation = 1;
-    ri.root_dirid = (r.id == BTRFS_ROOT_FSTREE || r.id >= 0x100) ? SUBVOL_ROOT_INODE : 0;
+    ri.root_dirid = (r.id == BTRFS_FS_TREE_OBJECTID || r.id >= 0x100) ? SUBVOL_ROOT_INODE : 0;
     ri.flags = r.readonly ? BTRFS_SUBVOL_READONLY : 0;
     ri.refs = 1;
     ri.generation_v2 = 1;
@@ -1295,8 +1295,8 @@ static root& add_image_subvol(root& root_root, root& fstree_root) {
         rr.name_len = sizeof(subvol_name) - 1;
         memcpy(&rr + 1, subvol_name, sizeof(subvol_name) - 1);
 
-        add_item(root_root, BTRFS_ROOT_FSTREE, btrfs_key_type::ROOT_REF, image_subvol_id, buf);
-        add_item_move(root_root, image_subvol_id, btrfs_key_type::ROOT_BACKREF, BTRFS_ROOT_FSTREE, buf);
+        add_item(root_root, BTRFS_FS_TREE_OBJECTID, btrfs_key_type::ROOT_REF, image_subvol_id, buf);
+        add_item_move(root_root, image_subvol_id, btrfs_key_type::ROOT_BACKREF, BTRFS_FS_TREE_OBJECTID, buf);
     }
 
     // add DIR_ITEM and DIR_INDEX
@@ -3300,7 +3300,7 @@ static void create_data_extent_items(root& extent_root, const runs_t& runs, uint
                 di.extent_item.generation = 1;
                 di.extent_item.flags = EXTENT_ITEM_DATA;
                 di.type = btrfs_key_type::EXTENT_DATA_REF;
-                di.edr.root = BTRFS_ROOT_FSTREE;
+                di.edr.root = BTRFS_FS_TREE_OBJECTID;
                 di.edr.objectid = r.inode;
                 di.edr.count = 1;
                 di.edr.offset = r.file_offset * cluster_size;
@@ -3319,7 +3319,7 @@ static void create_data_extent_items(root& extent_root, const runs_t& runs, uint
                 di2.type2 = btrfs_key_type::EXTENT_DATA_REF;
 
                 auto hash1 = get_extent_data_ref_hash2(image_subvol_id, image_inode, img_addr);
-                auto hash2 = get_extent_data_ref_hash2(BTRFS_ROOT_FSTREE, r.inode, r.file_offset * cluster_size);
+                auto hash2 = get_extent_data_ref_hash2(BTRFS_FS_TREE_OBJECTID, r.inode, r.file_offset * cluster_size);
 
                 if (hash2 > hash1) {
                     e1 = &di2.edr2;
@@ -3333,7 +3333,7 @@ static void create_data_extent_items(root& extent_root, const runs_t& runs, uint
                 e1->objectid = image_inode;
                 e1->count = 1;
                 e1->offset = img_addr;
-                e2->root = BTRFS_ROOT_FSTREE;
+                e2->root = BTRFS_FS_TREE_OBJECTID;
                 e2->objectid = r.inode;
                 e2->count = 1;
                 e2->offset = r.file_offset * cluster_size;
@@ -3666,11 +3666,11 @@ static void populate_root_root(root& root_root) {
     static const uint32_t default_hash = 0x8dbfc2d2;
 
     for (const auto& r : roots) {
-        if (r.id != BTRFS_ROOT_ROOT && r.id != BTRFS_ROOT_CHUNK)
+        if (r.id != BTRFS_ROOT_TREE_OBJECTID && r.id != BTRFS_CHUNK_TREE_OBJECTID)
             add_to_root_root(r, root_root);
     }
 
-    add_inode_ref(root_root, BTRFS_ROOT_FSTREE, BTRFS_ROOT_TREEDIR, 0, "default");
+    add_inode_ref(root_root, BTRFS_FS_TREE_OBJECTID, BTRFS_ROOT_TREE_DIR_OBJECTID, 0, "default");
 
     memset(&ii, 0, sizeof(btrfs_inode_item));
 
@@ -3679,15 +3679,15 @@ static void populate_root_root(root& root_root) {
     ii.nlink = 1;
     ii.mode = __S_IFDIR | S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
 
-    add_item(root_root, BTRFS_ROOT_TREEDIR, btrfs_key_type::INODE_ITEM, 0, &ii, sizeof(btrfs_inode_item));
+    add_item(root_root, BTRFS_ROOT_TREE_DIR_OBJECTID, btrfs_key_type::INODE_ITEM, 0, &ii, sizeof(btrfs_inode_item));
 
-    add_inode_ref(root_root, BTRFS_ROOT_TREEDIR, BTRFS_ROOT_TREEDIR, 0, "..");
+    add_inode_ref(root_root, BTRFS_ROOT_TREE_DIR_OBJECTID, BTRFS_ROOT_TREE_DIR_OBJECTID, 0, "..");
 
     buffer_t buf(sizeof(btrfs_dir_item) + sizeof(default_subvol) - 1);
     auto& di = *(btrfs_dir_item*)buf.data();
     auto* name = (char*)&di + sizeof(btrfs_dir_item);
 
-    di.location.objectid = BTRFS_ROOT_FSTREE;
+    di.location.objectid = BTRFS_FS_TREE_OBJECTID;
     di.location.type = btrfs_key_type::ROOT_ITEM;
     di.location.offset = 0xffffffffffffffff;
     di.transid = 0;
@@ -3696,7 +3696,7 @@ static void populate_root_root(root& root_root) {
     di.type = btrfs_dir_item_type::dir;
     memcpy(name, default_subvol, sizeof(default_subvol) - 1);
 
-    add_item_move(root_root, BTRFS_ROOT_TREEDIR, btrfs_key_type::DIR_ITEM, default_hash, buf);
+    add_item_move(root_root, BTRFS_ROOT_TREE_DIR_OBJECTID, btrfs_key_type::DIR_ITEM, default_hash, buf);
 }
 
 static void add_subvol_uuid(root& r) {
@@ -3753,31 +3753,31 @@ static void convert(ntfs& dev, btrfs_compression_type compression,
 
     create_data_chunks(dev, bmpdata);
 
-    roots.emplace_back(BTRFS_ROOT_ROOT);
+    roots.emplace_back(BTRFS_ROOT_TREE_OBJECTID);
     root& root_root = roots.back();
 
-    roots.emplace_back(BTRFS_ROOT_EXTENT);
+    roots.emplace_back(BTRFS_EXTENT_TREE_OBJECTID);
     root& extent_root = roots.back();
 
-    roots.emplace_back(BTRFS_ROOT_CHUNK);
+    roots.emplace_back(BTRFS_CHUNK_TREE_OBJECTID);
     root& chunk_root = roots.back();
 
     add_dev_item(chunk_root);
 
-    roots.emplace_back(BTRFS_ROOT_DEVTREE);
+    roots.emplace_back(BTRFS_DEV_TREE_OBJECTID);
     root& devtree_root = roots.back();
 
     add_dev_stats(devtree_root);
 
-    roots.emplace_back(BTRFS_ROOT_FSTREE);
+    roots.emplace_back(BTRFS_FS_TREE_OBJECTID);
     root& fstree_root = roots.back();
 
     populate_fstree(fstree_root);
 
-    roots.emplace_back(BTRFS_ROOT_DATA_RELOC);
+    roots.emplace_back(BTRFS_DATA_RELOC_TREE_OBJECTID);
     populate_fstree(roots.back());
 
-    roots.emplace_back(BTRFS_ROOT_CHECKSUM);
+    roots.emplace_back(BTRFS_CSUM_TREE_OBJECTID);
     root& csum_root = roots.back();
 
     root& image_subvol = add_image_subvol(root_root, fstree_root);
@@ -3824,7 +3824,7 @@ static void convert(ntfs& dev, btrfs_compression_type compression,
 
     create_image(image_subvol, dev, runs, image_inode, nocsum);
 
-    roots.emplace_back(BTRFS_ROOT_UUID);
+    roots.emplace_back(BTRFS_UUID_TREE_OBJECTID);
     add_subvol_uuid(roots.back());
 
     create_data_extent_items(extent_root, runs, dev.boot_sector->BytesPerSector * dev.boot_sector->SectorsPerCluster,
@@ -3843,7 +3843,7 @@ static void convert(ntfs& dev, btrfs_compression_type compression,
     populate_root_root(root_root);
 
     for (auto& r : roots) {
-        if (r.id != BTRFS_ROOT_EXTENT && r.id != BTRFS_ROOT_CHUNK && r.id != BTRFS_ROOT_DEVTREE)
+        if (r.id != BTRFS_EXTENT_TREE_OBJECTID && r.id != BTRFS_CHUNK_TREE_OBJECTID && r.id != BTRFS_DEV_TREE_OBJECTID)
             r.create_trees(extent_root, csum_type);
     }
 
@@ -3860,7 +3860,7 @@ static void convert(ntfs& dev, btrfs_compression_type compression,
         }
 
         for (auto& r : roots) {
-            if (r.id == BTRFS_ROOT_EXTENT || r.id == BTRFS_ROOT_CHUNK || r.id == BTRFS_ROOT_DEVTREE) {
+            if (r.id == BTRFS_EXTENT_TREE_OBJECTID || r.id == BTRFS_CHUNK_TREE_OBJECTID || r.id == BTRFS_DEV_TREE_OBJECTID) {
                 r.old_addresses.swap(r.addresses);
                 r.addresses.clear();
 

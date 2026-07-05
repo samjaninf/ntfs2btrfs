@@ -53,15 +53,15 @@ enum class btrfs_key_type : uint8_t {
     SUBVOL_REC_UUID = 0xFC
 };
 
-#define BTRFS_ROOT_ROOT         1
-#define BTRFS_ROOT_EXTENT       2
-#define BTRFS_ROOT_CHUNK        3
-#define BTRFS_ROOT_DEVTREE      4
-#define BTRFS_ROOT_FSTREE       5
-#define BTRFS_ROOT_TREEDIR      6
-#define BTRFS_ROOT_CHECKSUM     7
-#define BTRFS_ROOT_UUID         9
-#define BTRFS_ROOT_DATA_RELOC   0xFFFFFFFFFFFFFFF7
+constexpr uint64_t BTRFS_ROOT_TREE_OBJECTID = 0x1;
+constexpr uint64_t BTRFS_EXTENT_TREE_OBJECTID = 0x2;
+constexpr uint64_t BTRFS_CHUNK_TREE_OBJECTID = 0x3;
+constexpr uint64_t BTRFS_DEV_TREE_OBJECTID = 0x4;
+constexpr uint64_t BTRFS_FS_TREE_OBJECTID = 0x5;
+constexpr uint64_t BTRFS_ROOT_TREE_DIR_OBJECTID = 0x6;
+constexpr uint64_t BTRFS_CSUM_TREE_OBJECTID = 0x7;
+constexpr uint64_t BTRFS_UUID_TREE_OBJECTID = 0x9;
+constexpr uint64_t BTRFS_DATA_RELOC_TREE_OBJECTID = 0xfffffffffffffff7;
 
 enum class btrfs_compression_type : uint8_t {
     none = 0,
