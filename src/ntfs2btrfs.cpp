@@ -1107,7 +1107,7 @@ static void add_to_root_root(const root& r, root& root_root) {
     ri.inode.nlink = 1;
     ri.inode.mode = __S_IFDIR | S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
     ri.generation = 1;
-    ri.root_dirid = (r.id == BTRFS_FS_TREE_OBJECTID || r.id >= 0x100) ? SUBVOL_ROOT_INODE : 0;
+    ri.root_dirid = (r.id == BTRFS_FS_TREE_OBJECTID || r.id >= 0x100) ? BTRFS_FIRST_FREE_OBJECTID : 0;
     ri.flags = r.readonly ? BTRFS_SUBVOL_READONLY : 0;
     ri.refs = 1;
     ri.generation_v2 = 1;
@@ -1239,9 +1239,9 @@ static void populate_fstree(root& r) {
     ii.mode = __S_IFDIR | S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
     ii.sequence = 1;
 
-    add_item(r, SUBVOL_ROOT_INODE, btrfs_key_type::INODE_ITEM, 0, &ii, sizeof(btrfs_inode_item));
+    add_item(r, BTRFS_FIRST_FREE_OBJECTID, btrfs_key_type::INODE_ITEM, 0, &ii, sizeof(btrfs_inode_item));
 
-    add_inode_ref(r, SUBVOL_ROOT_INODE, SUBVOL_ROOT_INODE, 0, "..");
+    add_inode_ref(r, BTRFS_FIRST_FREE_OBJECTID, BTRFS_FIRST_FREE_OBJECTID, 0, "..");
 }
 
 static void update_chunk_root(root& chunk_root, enum btrfs_csum_type csum_type) {
@@ -1290,7 +1290,7 @@ static root& add_image_subvol(root& root_root, root& fstree_root) {
         buffer_t buf(sizeof(btrfs_root_ref) + sizeof(subvol_name) - 1);
         auto& rr = *(btrfs_root_ref*)buf.data();
 
-        rr.dirid = SUBVOL_ROOT_INODE;
+        rr.dirid = BTRFS_FIRST_FREE_OBJECTID;
         rr.sequence = 2;
         rr.name_len = sizeof(subvol_name) - 1;
         memcpy(&rr + 1, subvol_name, sizeof(subvol_name) - 1);
@@ -1317,15 +1317,15 @@ static root& add_image_subvol(root& root_root, root& fstree_root) {
 
         auto hash = calc_crc32c(0xfffffffe, (const uint8_t*)subvol_name, sizeof(subvol_name) - 1);
 
-        add_item(fstree_root, SUBVOL_ROOT_INODE, btrfs_key_type::DIR_ITEM, hash, buf);
-        add_item_move(fstree_root, SUBVOL_ROOT_INODE, btrfs_key_type::DIR_INDEX, 2, buf);
+        add_item(fstree_root, BTRFS_FIRST_FREE_OBJECTID, btrfs_key_type::DIR_ITEM, hash, buf);
+        add_item_move(fstree_root, BTRFS_FIRST_FREE_OBJECTID, btrfs_key_type::DIR_INDEX, 2, buf);
     }
 
     // increase size in parent dir
-    if (fstree_root.dir_size.count(SUBVOL_ROOT_INODE) == 0)
-        fstree_root.dir_size[SUBVOL_ROOT_INODE] = (sizeof(subvol_name) - 1) * 2;
+    if (fstree_root.dir_size.count(BTRFS_FIRST_FREE_OBJECTID) == 0)
+        fstree_root.dir_size[BTRFS_FIRST_FREE_OBJECTID] = (sizeof(subvol_name) - 1) * 2;
     else
-        fstree_root.dir_size.at(SUBVOL_ROOT_INODE) += (sizeof(subvol_name) - 1) * 2;
+        fstree_root.dir_size.at(BTRFS_FIRST_FREE_OBJECTID) += (sizeof(subvol_name) - 1) * 2;
 
     populate_fstree(r);
 
@@ -1383,18 +1383,18 @@ static void create_image(root& r, ntfs& dev, const runs_t& runs, uint64_t inode,
 
         auto hash = calc_crc32c(0xfffffffe, (const uint8_t*)image_filename, sizeof(image_filename) - 1);
 
-        add_item(r, SUBVOL_ROOT_INODE, btrfs_key_type::DIR_ITEM, hash, buf);
-        add_item_move(r, SUBVOL_ROOT_INODE, btrfs_key_type::DIR_INDEX, 2, buf);
+        add_item(r, BTRFS_FIRST_FREE_OBJECTID, btrfs_key_type::DIR_ITEM, hash, buf);
+        add_item_move(r, BTRFS_FIRST_FREE_OBJECTID, btrfs_key_type::DIR_INDEX, 2, buf);
     }
 
     // add INODE_REF
 
-    add_inode_ref(r, inode, SUBVOL_ROOT_INODE, 2, image_filename);
+    add_inode_ref(r, inode, BTRFS_FIRST_FREE_OBJECTID, 2, image_filename);
 
     // increase size in parent dir
 
     for (auto& it : r.items) {
-        if (it.first.objectid == SUBVOL_ROOT_INODE && it.first.type == btrfs_key_type::INODE_ITEM) {
+        if (it.first.objectid == BTRFS_FIRST_FREE_OBJECTID && it.first.type == btrfs_key_type::INODE_ITEM) {
             auto& ii2 = *(btrfs_inode_item*)it.second.data();
 
             ii2.size += (sizeof(image_filename) - 1) * 2;
@@ -3161,7 +3161,7 @@ static void add_inode(root& r, uint64_t inode, uint64_t ntfs_inode, bool& is_dir
 
     for (const auto& l : links) {
         if (get<0>(l) == NTFS_ROOT_DIR_INODE)
-            link_inode(r, inode, SUBVOL_ROOT_INODE, get<1>(l), item_type);
+            link_inode(r, inode, BTRFS_FIRST_FREE_OBJECTID, get<1>(l), item_type);
         else
             link_inode(r, inode, get<0>(l) + inode_offset, get<1>(l), item_type);
     }
@@ -3211,7 +3211,7 @@ static void create_inodes(root& r, const buffer_t& mftbmp, ntfs& dev, runs_t& ru
     list<uint64_t> skiplist;
     uint64_t total = 0, num = 0;
 
-    r.dir_seqs[SUBVOL_ROOT_INODE] = 3;
+    r.dir_seqs[BTRFS_FIRST_FREE_OBJECTID] = 3;
 
     parse_bitmap(mftbmp, inodes);
 

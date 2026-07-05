@@ -19,7 +19,7 @@ static const uint64_t superblock_addrs[] = { 0x10000, 0x4000000, 0x4000000000, 0
 
 constexpr uint64_t BTRFS_MAGIC = 0x4d5f53665248425f;
 
-#define SUBVOL_ROOT_INODE   0x100
+constexpr uint64_t BTRFS_FIRST_FREE_OBJECTID = 0x100;
 
 enum class btrfs_key_type : uint8_t {
     INODE_ITEM = 0x01,

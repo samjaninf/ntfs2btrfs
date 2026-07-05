@@ -376,10 +376,10 @@ void rollback(const string& fn) {
     uint32_t hash = calc_crc32c(0xfffffffe, (const uint8_t*)image_filename, sizeof(image_filename) - 1);
 
     b.walk_tree(img_root_addr, [&](const btrfs_key& key, string_view data) {
-        if (key.objectid > SUBVOL_ROOT_INODE || (key.objectid == SUBVOL_ROOT_INODE && key.type > btrfs_key_type::DIR_ITEM))
+        if (key.objectid > BTRFS_FIRST_FREE_OBJECTID || (key.objectid == BTRFS_FIRST_FREE_OBJECTID && key.type > btrfs_key_type::DIR_ITEM))
             return false;
 
-        if (key.objectid == SUBVOL_ROOT_INODE && key.type == btrfs_key_type::DIR_ITEM && key.offset == hash) {
+        if (key.objectid == BTRFS_FIRST_FREE_OBJECTID && key.type == btrfs_key_type::DIR_ITEM && key.offset == hash) {
             auto& di = *(btrfs_dir_item*)data.data();
             auto name = (char*)&di + sizeof(btrfs_dir_item);
 
