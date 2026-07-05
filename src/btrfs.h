@@ -188,8 +188,6 @@ struct btrfs_dev_item {
     btrfs_uuid fsid;
 } __attribute__((packed));
 
-#define BTRFS_NUM_BACKUP_ROOTS 4
-
 struct btrfs_root_backup {
     le64 tree_root;
     le64 tree_root_gen;
