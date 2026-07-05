@@ -314,10 +314,10 @@ static void remove_superblocks(chunk& c) {
 
     // FIXME - DUP
 
-    while (superblock_addrs[i] != 0) {
-        if (c.disk_start + c.length > superblock_addrs[i] && c.disk_start < superblock_addrs[i] + stripe_length) {
-            uint64_t start = max(c.offset, superblock_addrs[i] - c.disk_start + c.offset);
-            uint64_t end = min(c.offset + c.length, superblock_addrs[i] + stripe_length - c.disk_start + c.offset);
+    while (btrfs_superblock_addrs[i] != 0) {
+        if (c.disk_start + c.length > btrfs_superblock_addrs[i] && c.disk_start < btrfs_superblock_addrs[i] + stripe_length) {
+            uint64_t start = max(c.offset, btrfs_superblock_addrs[i] - c.disk_start + c.offset);
+            uint64_t end = min(c.offset + c.length, btrfs_superblock_addrs[i] + stripe_length - c.disk_start + c.offset);
 
             space_list_remove(c.space_list, start, end - start);
         }
@@ -1054,11 +1054,11 @@ static void write_superblocks(ntfs& dev, root& chunk_root, root& root_root,
     }
 
     i = 0;
-    while (superblock_addrs[i] != 0) {
-        if (superblock_addrs[i] > device_size - buf.size())
+    while (btrfs_superblock_addrs[i] != 0) {
+        if (btrfs_superblock_addrs[i] > device_size - buf.size())
             return;
 
-        sb.bytenr = superblock_addrs[i];
+        sb.bytenr = btrfs_superblock_addrs[i];
 
         switch (csum_type) {
             case btrfs_csum_type::crc32c:
@@ -1081,7 +1081,7 @@ static void write_superblocks(ntfs& dev, root& chunk_root, root& root_root,
                 break;
         }
 
-        dev.write(superblock_addrs[i], buf.data(), buf.size());
+        dev.write(btrfs_superblock_addrs[i], buf.data(), buf.size());
 
         i++;
     }
@@ -3612,12 +3612,12 @@ static void protect_superblocks(ntfs& dev, runs_t& runs) {
     uint32_t cluster_size = dev.boot_sector->BytesPerSector * dev.boot_sector->SectorsPerCluster;
 
     unsigned int i = 0;
-    while (superblock_addrs[i] != 0) {
-        if (superblock_addrs[i] > device_size - sizeof(btrfs_super_block))
+    while (btrfs_superblock_addrs[i] != 0) {
+        if (btrfs_superblock_addrs[i] > device_size - sizeof(btrfs_super_block))
             break;
 
-        uint64_t cluster_start = (superblock_addrs[i] - (superblock_addrs[i] % stripe_length)) / cluster_size;
-        uint64_t cluster_end = sector_align(superblock_addrs[i] - (superblock_addrs[i] % stripe_length) + stripe_length, cluster_size) / cluster_size;
+        uint64_t cluster_start = (btrfs_superblock_addrs[i] - (btrfs_superblock_addrs[i] % stripe_length)) / cluster_size;
+        uint64_t cluster_end = sector_align(btrfs_superblock_addrs[i] - (btrfs_superblock_addrs[i] % stripe_length) + stripe_length, cluster_size) / cluster_size;
 
         for (uint64_t j = cluster_start; j < cluster_end; j++) {
             protect_cluster(dev, runs, j);

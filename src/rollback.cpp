@@ -18,7 +18,6 @@
 module;
 
 #include "ntfs2btrfs.h"
-#include "btrfs.h"
 #include <iostream>
 #include <fstream>
 #include <functional>
@@ -32,6 +31,7 @@ export module rollback;
 import crc32c;
 import formatted_error;
 import buffer_t;
+import cxxbtrfs;
 
 using namespace std;
 
@@ -135,8 +135,8 @@ btrfs_super_block btrfs::read_superblock() {
 #endif
 
     unsigned int i = 0;
-    while (superblock_addrs[i] != 0 && superblock_addrs[i] + sizeof(btrfs_super_block) < device_size) {
-        auto buf = raw_read(superblock_addrs[i], sizeof(btrfs_super_block));
+    while (btrfs_superblock_addrs[i] != 0 && btrfs_superblock_addrs[i] + sizeof(btrfs_super_block) < device_size) {
+        auto buf = raw_read(btrfs_superblock_addrs[i], sizeof(btrfs_super_block));
 
         const auto& sb2 = *(btrfs_super_block*)buf.data();
 

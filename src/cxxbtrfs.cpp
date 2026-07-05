@@ -1,21 +1,34 @@
-/* btrfs.h
- * Generic btrfs header file. Thanks to whoever it was who wrote
- * https://btrfs.wiki.kernel.org/index.php/On-disk_Format - you saved me a lot of time!
+/* Copyright (c) Mark Harmstone 2026
  *
- * I release this file, and this file only, into the public domain - do whatever
- * you want with it. You don't have to, but I'd appreciate if you let me know if you
- * use it anything cool - mark@harmstone.com. */
+ * This file is part of ntfs2btrfs.
+ *
+ * Ntfs2btrfs is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public Licence as published by
+ * the Free Software Foundation, either version 2 of the Licence, or
+ * (at your option) any later version.
+ *
+ * Ntfs2btrfs is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public Licence for more details.
+ *
+ * You should have received a copy of the GNU General Public Licence
+ * along with Ntfs2btrfs. If not, see <https://www.gnu.org/licenses/>. */
 
-#pragma once
+module;
 
 #include <stdint.h>
 #include <array>
+
+export module cxxbtrfs;
 
 using le64 = uint64_t;
 using le32 = uint32_t;
 using le16 = uint16_t;
 
-static const uint64_t superblock_addrs[] = { 0x10000, 0x4000000, 0x4000000000, 0x4000000000000, 0 };
+export {
+
+constexpr uint64_t btrfs_superblock_addrs[] = { 0x10000, 0x4000000, 0x4000000000, 0x4000000000000, 0 };
 
 constexpr uint64_t BTRFS_MAGIC = 0x4d5f53665248425f;
 
@@ -407,3 +420,5 @@ struct btrfs_dev_extent {
     le64 length;
     btrfs_uuid chunk_tree_uuid;
 } __attribute__ ((__packed__));
+
+};

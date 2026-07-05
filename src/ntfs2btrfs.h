@@ -17,7 +17,6 @@
 
 #pragma once
 
-#include "btrfs.h"
 #include "config.h"
 #include <string.h>
 #include <map>
@@ -42,6 +41,7 @@
 #endif
 
 import buffer_t;
+import cxxbtrfs;
 
 #ifdef _WIN32
 class last_error : public std::exception {

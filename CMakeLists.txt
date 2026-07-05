@@ -63,6 +63,7 @@ target_sources(ntfs2btrfs PUBLIC FILE_SET CXX_MODULES FILES
     src/rollback.cpp
     src/sha256.cpp
     src/blake2b-ref.cpp
+    src/cxxbtrfs.cpp
 )
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
