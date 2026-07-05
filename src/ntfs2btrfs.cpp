@@ -529,7 +529,7 @@ static uint64_t allocate_metadata(uint64_t r, root& extent_root, uint8_t level) 
 
     mi.extent_item.refs = 1;
     mi.extent_item.generation = 1;
-    mi.extent_item.flags = EXTENT_ITEM_TREE_BLOCK;
+    mi.extent_item.flags = BTRFS_EXTENT_FLAG_TREE_BLOCK;
     mi.eir.type = btrfs_key_type::TREE_BLOCK_REF;
     mi.eir.offset = r;
 
@@ -3284,7 +3284,7 @@ static void create_data_extent_items(root& extent_root, const runs_t& runs, uint
 
                 di.extent_item.refs = 1;
                 di.extent_item.generation = 1;
-                di.extent_item.flags = EXTENT_ITEM_DATA;
+                di.extent_item.flags = BTRFS_EXTENT_FLAG_DATA;
                 di.type = btrfs_key_type::EXTENT_DATA_REF;
                 di.edr.root = image_subvol_id;
                 di.edr.objectid = image_inode;
@@ -3298,7 +3298,7 @@ static void create_data_extent_items(root& extent_root, const runs_t& runs, uint
 
                 di.extent_item.refs = 1;
                 di.extent_item.generation = 1;
-                di.extent_item.flags = EXTENT_ITEM_DATA;
+                di.extent_item.flags = BTRFS_EXTENT_FLAG_DATA;
                 di.type = btrfs_key_type::EXTENT_DATA_REF;
                 di.edr.root = BTRFS_FS_TREE_OBJECTID;
                 di.edr.objectid = r.inode;
@@ -3314,7 +3314,7 @@ static void create_data_extent_items(root& extent_root, const runs_t& runs, uint
 
                 di2.extent_item.refs = 2;
                 di2.extent_item.generation = 1;
-                di2.extent_item.flags = EXTENT_ITEM_DATA;
+                di2.extent_item.flags = BTRFS_EXTENT_FLAG_DATA;
                 di2.type1 = btrfs_key_type::EXTENT_DATA_REF;
                 di2.type2 = btrfs_key_type::EXTENT_DATA_REF;
 

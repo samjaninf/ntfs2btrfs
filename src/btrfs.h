@@ -367,9 +367,8 @@ struct btrfs_inode_ref {
     le16 name_len;
 } __attribute__ ((__packed__));
 
-#define EXTENT_ITEM_DATA            0x001
-#define EXTENT_ITEM_TREE_BLOCK      0x002
-#define EXTENT_ITEM_SHARED_BACKREFS 0x100
+constexpr uint64_t BTRFS_EXTENT_FLAG_DATA = 1 << 0;
+constexpr uint64_t BTRFS_EXTENT_FLAG_TREE_BLOCK = 1 << 1;
 
 struct btrfs_extent_item {
     le64 refs;
