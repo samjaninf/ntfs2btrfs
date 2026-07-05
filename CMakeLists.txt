@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14.3)
+cmake_minimum_required(VERSION 3.28)
 
 cmake_policy(SET CMP0091 NEW)
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
@@ -14,7 +14,7 @@ option(WITH_ZSTD "Include zstd support" ON)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/ntfs2btrfs.8.in ${CMAKE_CURRENT_BINARY_DIR}/ntfs2btrfs.8)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(fmt REQUIRED)
@@ -45,7 +45,6 @@ set(SRC_FILES src/ntfs2btrfs.cpp
     src/decomp.cpp
     src/compress.cpp
     src/rollback.cpp
-    src/crc32c.c
     src/xxhash.c
     src/sha256.c
     src/blake2b-ref.c
@@ -60,6 +59,10 @@ else()
 endif()
 
 add_executable(ntfs2btrfs ${SRC_FILES})
+
+target_sources(ntfs2btrfs PUBLIC FILE_SET CXX_MODULES FILES
+    src/crc32c.cpp
+)
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
     add_definitions(-D_GLIBCXX_DEBUG)

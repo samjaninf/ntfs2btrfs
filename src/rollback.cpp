@@ -16,11 +16,12 @@
  * along with Ntfs2btrfs. If not, see <https://www.gnu.org/licenses/>. */
 
 #include "ntfs2btrfs.h"
-#include "crc32c.h"
 #include <iostream>
 #include <fstream>
 #include <functional>
 #include <codecvt>
+
+import crc32c;
 
 using namespace std;
 

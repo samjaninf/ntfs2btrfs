@@ -15,17 +15,34 @@
  * You should have received a copy of the GNU Lesser General Public Licence
  * along with WinBtrfs.  If not, see <http://www.gnu.org/licenses/>. */
 
-#include "crc32c.h"
+module;
+
 #include <stdint.h>
 #include <stdbool.h>
 
-crc_func calc_crc32c = calc_crc32c_sw;
+export module crc32c;
 
-#ifdef __cplusplus
-extern "C"
-{
+#ifndef _WIN32
+#ifdef __i386__
+#define __stdcall __attribute__((stdcall))
+#elif defined(__x86_64__)
+#define __stdcall __attribute__((ms_abi))
+#else
+#define __stdcall
+#endif
 #endif
 
+#if defined(__i386__) || defined(__x86_64__)
+export extern "C" uint32_t __stdcall calc_crc32c_hw(uint32_t seed, const uint8_t* msg, uint32_t msglen);
+#endif
+
+export extern "C" uint32_t __stdcall calc_crc32c_sw(uint32_t seed, const uint8_t* msg, uint32_t msglen);
+
+using crc_func = uint32_t (__stdcall*)(uint32_t seed, const uint8_t* msg, uint32_t msglen);
+
+export crc_func calc_crc32c = calc_crc32c_sw;
+
+extern "C"
 const uint32_t crctable[] = {
     0x00000000, 0xf26b8303, 0xe13b70f7, 0x1350f3f4, 0xc79a971f, 0x35f1141c, 0x26a1e7e8, 0xd4ca64eb,
     0x8ad958cf, 0x78b2dbcc, 0x6be22838, 0x9989ab3b, 0x4d43cfd0, 0xbf284cd3, 0xac78bf27, 0x5e133c24,
@@ -63,6 +80,7 @@ const uint32_t crctable[] = {
 
 // x86 and amd64 versions live in asm files
 #if !defined(__i386__) && !defined(__x86_64__) && !defined(_M_IX86) && !defined(_M_X64)
+extern "C"
 uint32_t __stdcall calc_crc32c_sw(uint32_t seed, const uint8_t* msg, uint32_t msglen) {
     uint32_t rem = seed;
 
@@ -71,9 +89,5 @@ uint32_t __stdcall calc_crc32c_sw(uint32_t seed, const uint8_t* msg, uint32_t ms
     }
 
     return rem;
-}
-#endif
-
-#ifdef __cplusplus
 }
 #endif

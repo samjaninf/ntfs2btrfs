@@ -17,7 +17,6 @@
 
 #include "ntfs.h"
 #include "ntfs2btrfs.h"
-#include "crc32c.h"
 #include "xxhash.h"
 
 #if defined(__i386__) || defined(__x86_64__)
@@ -47,6 +46,8 @@
 #endif
 
 #include "config.h"
+
+import crc32c;
 
 using namespace std;
 
