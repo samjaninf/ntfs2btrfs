@@ -62,6 +62,7 @@ add_executable(ntfs2btrfs ${SRC_FILES})
 
 target_sources(ntfs2btrfs PUBLIC FILE_SET CXX_MODULES FILES
     src/crc32c.cpp
+    src/buffer_t.cpp
 )
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
