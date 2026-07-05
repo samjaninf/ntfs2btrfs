@@ -65,6 +65,7 @@ target_sources(ntfs2btrfs PUBLIC FILE_SET CXX_MODULES FILES
     src/blake2b-ref.cpp
     src/cxxbtrfs.cpp
     src/ntfs.cpp
+    src/unicode.cpp
 )
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")

@@ -37,6 +37,7 @@ module;
 module ntfs;
 
 import formatted_error;
+import unicode;
 
 using namespace std;
 

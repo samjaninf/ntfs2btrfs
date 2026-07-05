@@ -203,6 +203,3 @@ static inline uint64_t sector_align(uint64_t v, uint64_t s) {
 
 static const uint64_t image_subvol_id = 0x100;
 static const char image_filename[] = "ntfs.img";
-
-// ntfs2btrfs.cpp
-std::string utf16_to_utf8(std::u16string_view sv);
