@@ -13,11 +13,15 @@
    https://blake2.net.
 */
 
+module;
+
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
 
 #include "blake2-impl.h"
+
+export module blake2b;
 
 static const uint64_t blake2b_IV[8] =
 {
@@ -234,7 +238,7 @@ static int blake2b_final( blake2b_state *S, void *out, size_t outlen )
 }
 
 /* inlen, at least, should be uint64_t. Others can be size_t. */
-void blake2b( void *out, size_t outlen, const void *in, size_t inlen )
+export void blake2b( void *out, size_t outlen, const void *in, size_t inlen )
 {
   blake2b_state S[1];
 

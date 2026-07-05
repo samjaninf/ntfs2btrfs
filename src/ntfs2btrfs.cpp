@@ -54,6 +54,7 @@ import compress;
 import decomp;
 import rollback;
 import sha256;
+import blake2b;
 
 using namespace std;
 

@@ -348,8 +348,5 @@ struct std::formatter<enum btrfs_key_type> {
 static const uint64_t image_subvol_id = 0x100;
 static const char image_filename[] = "ntfs.img";
 
-// blake2b-ref.c
-extern "C" void blake2b(void *out, size_t outlen, const void* in, size_t inlen);
-
 // ntfs2btrfs.cpp
 std::string utf16_to_utf8(std::u16string_view sv);

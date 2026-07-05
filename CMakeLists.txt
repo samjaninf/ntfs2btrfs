@@ -42,7 +42,6 @@ add_library(lzx STATIC
 set(SRC_FILES src/ntfs2btrfs.cpp
     src/ntfs.cpp
     src/xxhash.c
-    src/blake2b-ref.c
 )
 
 if(MSVC)
@@ -63,6 +62,7 @@ target_sources(ntfs2btrfs PUBLIC FILE_SET CXX_MODULES FILES
     src/decomp.cpp
     src/rollback.cpp
     src/sha256.cpp
+    src/blake2b-ref.cpp
 )
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
