@@ -15,15 +15,23 @@
  * You should have received a copy of the GNU General Public Licence
  * along with Ntfs2btrfs. If not, see <https://www.gnu.org/licenses/>. */
 
+module;
+
 #include "ntfs2btrfs.h"
+#include "btrfs.h"
 #include <iostream>
 #include <fstream>
 #include <functional>
 #include <codecvt>
 #include <print>
+#include <map>
+#include <string.h>
+
+export module rollback;
 
 import crc32c;
 import formatted_error;
+import buffer_t;
 
 using namespace std;
 
@@ -368,7 +376,7 @@ uint64_t btrfs::find_root_addr(uint64_t root) {
     return ret.value();
 }
 
-void rollback(const string& fn) {
+export void rollback(const string& fn) {
     btrfs b(fn);
 
     auto img_root_addr = b.find_root_addr(image_subvol_id);
