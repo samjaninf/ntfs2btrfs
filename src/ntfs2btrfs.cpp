@@ -977,8 +977,8 @@ static void write_superblocks(ntfs& dev, root& chunk_root, root& root_root,
         }
     }
 
-    if (sys_chunk_size > SYS_CHUNK_ARRAY_SIZE)
-        throw formatted_error("System chunk list was too long ({} > {}).", sys_chunk_size, SYS_CHUNK_ARRAY_SIZE);
+    if (sys_chunk_size > sb.sys_chunk_array.size())
+        throw formatted_error("System chunk list was too long ({} > {}).", sys_chunk_size, sb.sys_chunk_array.size());
 
     total_used = 0;
 
@@ -1024,7 +1024,7 @@ static void write_superblocks(ntfs& dev, root& chunk_root, root& root_root,
     sb.uuid_tree_generation = 1;
 
     {
-        uint8_t* ptr = sb.sys_chunk_array;
+        uint8_t* ptr = sb.sys_chunk_array.data();
 
         for (const auto& c : chunk_root.items) {
             if (c.first.type == btrfs_key_type::CHUNK_ITEM) {

@@ -312,7 +312,7 @@ void btrfs::read_chunks() {
         chunks.emplace(+key.offset, buffer_t{chunk_item.data(), chunk_item.data() + chunk_item.size()});
 
         ptr += sizeof(key) + chunk_item.size();
-    } while (ptr < &sb.sys_chunk_array[SYS_CHUNK_ARRAY_SIZE]);
+    } while (ptr < sb.sys_chunk_array.data() + sb.sys_chunk_array.size());
 
 #if 0
     for (const auto& c : chunks) {

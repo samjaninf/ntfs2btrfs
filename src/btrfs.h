@@ -9,6 +9,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <array>
 
 using le64 = uint64_t;
 using le32 = uint32_t;
@@ -180,7 +181,6 @@ struct btrfs_dev_item {
     btrfs_uuid fsid;
 } __attribute__((packed));
 
-#define SYS_CHUNK_ARRAY_SIZE 0x800
 #define BTRFS_NUM_BACKUP_ROOTS 4
 
 struct btrfs_root_backup {
@@ -247,7 +247,7 @@ struct btrfs_super_block {
     le64 remap_root_generation;
     uint8_t remap_root_level;
     uint8_t reserved[199];
-    uint8_t sys_chunk_array[0x800];
+    std::array<uint8_t, 0x800> sys_chunk_array;
     btrfs_root_backup super_roots[4];
     uint8_t padding[565];
 } __attribute__((packed));
