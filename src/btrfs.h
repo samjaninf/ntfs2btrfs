@@ -18,7 +18,6 @@ using le16 = uint16_t;
 static const uint64_t superblock_addrs[] = { 0x10000, 0x4000000, 0x4000000000, 0x4000000000000, 0 };
 
 #define BTRFS_MAGIC         0x4d5f53665248425f
-#define MAX_LABEL_SIZE      0x100
 #define SUBVOL_ROOT_INODE   0x100
 
 enum class btrfs_key_type : uint8_t {
@@ -238,7 +237,7 @@ struct btrfs_super_block {
     uint8_t chunk_root_level;
     uint8_t log_root_level;
     btrfs_dev_item dev_item;
-    char label[0x100];
+    std::array<char, 0x100> label;
     le64 cache_generation;
     le64 uuid_tree_generation;
     btrfs_uuid metadata_uuid;
