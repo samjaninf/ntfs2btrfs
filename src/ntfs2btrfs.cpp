@@ -3543,7 +3543,7 @@ static void calc_checksums(root& csum_root, runs_t runs, ntfs& dev, enum btrfs_c
             }
         }
 
-        add_item(csum_root, EXTENT_CSUM_ID, btrfs_key_type::EXTENT_CSUM, (r.offset * cluster_size) + chunk_virt_offset, &csums[0], (uint16_t)(r.length * cluster_size * csum_size / sector_size));
+        add_item(csum_root, BTRFS_EXTENT_CSUM_OBJECTID, btrfs_key_type::EXTENT_CSUM, (r.offset * cluster_size) + chunk_virt_offset, &csums[0], (uint16_t)(r.length * cluster_size * csum_size / sector_size));
     }
 
     fmt::print("\n");

@@ -61,6 +61,7 @@ constexpr uint64_t BTRFS_FS_TREE_OBJECTID = 0x5;
 constexpr uint64_t BTRFS_ROOT_TREE_DIR_OBJECTID = 0x6;
 constexpr uint64_t BTRFS_CSUM_TREE_OBJECTID = 0x7;
 constexpr uint64_t BTRFS_UUID_TREE_OBJECTID = 0x9;
+constexpr uint64_t BTRFS_EXTENT_CSUM_OBJECTID = 0xfffffffffffffff6;
 constexpr uint64_t BTRFS_DATA_RELOC_TREE_OBJECTID = 0xfffffffffffffff7;
 
 enum class btrfs_compression_type : uint8_t {
@@ -87,8 +88,6 @@ constexpr uint64_t BTRFS_BLOCK_GROUP_RAID5 = 1 << 7;
 constexpr uint64_t BTRFS_BLOCK_GROUP_RAID6 = 1 << 8;
 constexpr uint64_t BTRFS_BLOCK_GROUP_RAID1C3 = 1 << 9;
 constexpr uint64_t BTRFS_BLOCK_GROUP_RAID1C4 = 1 << 10;
-
-#define EXTENT_CSUM_ID          0xFFFFFFFFFFFFFFF6
 
 constexpr uint64_t BTRFS_INODE_NODATASUM = 1 << 0;
 constexpr uint64_t BTRFS_INODE_NODATACOW = 1 << 1;
