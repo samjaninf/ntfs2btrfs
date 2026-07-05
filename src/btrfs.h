@@ -90,18 +90,20 @@ constexpr uint64_t BTRFS_BLOCK_GROUP_RAID1C4 = 1 << 10;
 
 #define EXTENT_CSUM_ID          0xFFFFFFFFFFFFFFF6
 
-#define BTRFS_INODE_NODATASUM   0x001
-#define BTRFS_INODE_NODATACOW   0x002
-#define BTRFS_INODE_READONLY    0x004
-#define BTRFS_INODE_NOCOMPRESS  0x008
-#define BTRFS_INODE_PREALLOC    0x010
-#define BTRFS_INODE_SYNC        0x020
-#define BTRFS_INODE_IMMUTABLE   0x040
-#define BTRFS_INODE_APPEND      0x080
-#define BTRFS_INODE_NODUMP      0x100
-#define BTRFS_INODE_NOATIME     0x200
-#define BTRFS_INODE_DIRSYNC     0x400
-#define BTRFS_INODE_COMPRESS    0x800
+constexpr uint64_t BTRFS_INODE_NODATASUM = 1 << 0;
+constexpr uint64_t BTRFS_INODE_NODATACOW = 1 << 1;
+constexpr uint64_t BTRFS_INODE_READONLY = 1 << 2;
+constexpr uint64_t BTRFS_INODE_NOCOMPRESS = 1 << 3;
+constexpr uint64_t BTRFS_INODE_PREALLOC = 1 << 4;
+constexpr uint64_t BTRFS_INODE_SYNC = 1 << 5;
+constexpr uint64_t BTRFS_INODE_IMMUTABLE = 1 << 6;
+constexpr uint64_t BTRFS_INODE_APPEND = 1 << 7;
+constexpr uint64_t BTRFS_INODE_NODUMP = 1 << 8;
+constexpr uint64_t BTRFS_INODE_NOATIME = 1 << 9;
+constexpr uint64_t BTRFS_INODE_DIRSYNC = 1 << 10;
+constexpr uint64_t BTRFS_INODE_COMPRESS = 1 << 11;
+constexpr uint64_t BTRFS_INODE_ENCRYPT = 1 << 12;
+constexpr uint64_t BTRFS_INODE_ROOT_ITEM_INIT = (uint64_t)1 << 31;
 
 #define BTRFS_SUBVOL_READONLY   0x1
 
