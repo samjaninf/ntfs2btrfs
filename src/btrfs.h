@@ -76,17 +76,17 @@ enum class btrfs_file_extent_item_type : uint8_t {
     prealloc = 2
 };
 
-#define BLOCK_FLAG_DATA         0x001
-#define BLOCK_FLAG_SYSTEM       0x002
-#define BLOCK_FLAG_METADATA     0x004
-#define BLOCK_FLAG_RAID0        0x008
-#define BLOCK_FLAG_RAID1        0x010
-#define BLOCK_FLAG_DUPLICATE    0x020
-#define BLOCK_FLAG_RAID10       0x040
-#define BLOCK_FLAG_RAID5        0x080
-#define BLOCK_FLAG_RAID6        0x100
-#define BLOCK_FLAG_RAID1C3      0x200
-#define BLOCK_FLAG_RAID1C4      0x400
+constexpr uint64_t BTRFS_BLOCK_GROUP_DATA = 1 << 0;
+constexpr uint64_t BTRFS_BLOCK_GROUP_SYSTEM = 1 << 1;
+constexpr uint64_t BTRFS_BLOCK_GROUP_METADATA = 1 << 2;
+constexpr uint64_t BTRFS_BLOCK_GROUP_RAID0 = 1 << 3;
+constexpr uint64_t BTRFS_BLOCK_GROUP_RAID1 = 1 << 4;
+constexpr uint64_t BTRFS_BLOCK_GROUP_DUP = 1 << 5;
+constexpr uint64_t BTRFS_BLOCK_GROUP_RAID10 = 1 << 6;
+constexpr uint64_t BTRFS_BLOCK_GROUP_RAID5 = 1 << 7;
+constexpr uint64_t BTRFS_BLOCK_GROUP_RAID6 = 1 << 8;
+constexpr uint64_t BTRFS_BLOCK_GROUP_RAID1C3 = 1 << 9;
+constexpr uint64_t BTRFS_BLOCK_GROUP_RAID1C4 = 1 << 10;
 
 #define EXTENT_CSUM_ID          0xFFFFFFFFFFFFFFF6
 

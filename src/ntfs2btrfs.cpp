@@ -430,7 +430,7 @@ static void create_data_chunks(ntfs& dev, const buffer_t& bmpdata) {
 
         if (!used.empty()) {
             space_list_remove(space_list, addr, chunk_length);
-            chunks.emplace_back(addr + chunk_virt_offset, chunk_length, addr, BLOCK_FLAG_DATA);
+            chunks.emplace_back(addr + chunk_virt_offset, chunk_length, addr, BTRFS_BLOCK_GROUP_DATA);
 
             auto& c = chunks.back();
             uint64_t last = 0;
@@ -534,7 +534,7 @@ static uint64_t allocate_metadata(uint64_t r, root& extent_root, uint8_t level) 
     mi.eir.offset = r;
 
     for (auto& c : chunks) {
-        if ((system_chunk && c.type & BLOCK_FLAG_SYSTEM) || (!system_chunk && c.type & BLOCK_FLAG_METADATA)) {
+        if ((system_chunk && c.type & BTRFS_BLOCK_GROUP_SYSTEM) || (!system_chunk && c.type & BTRFS_BLOCK_GROUP_METADATA)) {
             for (auto it = c.space_list.begin(); it != c.space_list.end(); it++) {
                 if (it->length >= tree_size) {
                     uint64_t addr = it->offset;
@@ -577,7 +577,7 @@ static uint64_t allocate_metadata(uint64_t r, root& extent_root, uint8_t level) 
     if (!found)
         throw formatted_error(chunk_error_message);
 
-    chunks.emplace_back(disk_offset + chunk_virt_offset, chunk_size, disk_offset, system_chunk ? BLOCK_FLAG_SYSTEM : BLOCK_FLAG_METADATA);
+    chunks.emplace_back(disk_offset + chunk_virt_offset, chunk_size, disk_offset, system_chunk ? BTRFS_BLOCK_GROUP_SYSTEM : BTRFS_BLOCK_GROUP_METADATA);
 
     chunk& c = chunks.back();
 
@@ -612,7 +612,7 @@ static uint64_t allocate_data(uint64_t length, bool change_used) {
     bool found = false;
 
     for (auto& c : chunks) {
-        if (c.type & BLOCK_FLAG_DATA) {
+        if (c.type & BTRFS_BLOCK_GROUP_DATA) {
             for (auto it = c.space_list.begin(); it != c.space_list.end(); it++) {
                 if (it->length >= length) {
                     uint64_t addr = it->offset;
@@ -649,7 +649,7 @@ static uint64_t allocate_data(uint64_t length, bool change_used) {
     if (!found)
         throw formatted_error(chunk_error_message);
 
-    chunks.emplace_back(disk_offset + chunk_virt_offset, data_chunk_size, disk_offset, BLOCK_FLAG_DATA);
+    chunks.emplace_back(disk_offset + chunk_virt_offset, data_chunk_size, disk_offset, BTRFS_BLOCK_GROUP_DATA);
 
     chunk& c = chunks.back();
 
@@ -970,7 +970,7 @@ static void write_superblocks(ntfs& dev, root& chunk_root, root& root_root,
         if (c.first.type == btrfs_key_type::CHUNK_ITEM) {
             auto& ci = *(btrfs_chunk*)c.second.data();
 
-            if (ci.type & BLOCK_FLAG_SYSTEM) {
+            if (ci.type & BTRFS_BLOCK_GROUP_SYSTEM) {
                 sys_chunk_size += sizeof(btrfs_key);
                 sys_chunk_size += (uint32_t)c.second.size();
             }
@@ -1030,7 +1030,7 @@ static void write_superblocks(ntfs& dev, root& chunk_root, root& root_root,
             if (c.first.type == btrfs_key_type::CHUNK_ITEM) {
                 auto& ci = *(btrfs_chunk*)c.second.data();
 
-                if (ci.type & BLOCK_FLAG_SYSTEM) {
+                if (ci.type & BTRFS_BLOCK_GROUP_SYSTEM) {
                     auto& key = *(btrfs_key*)ptr;
 
                     key = c.first;

@@ -229,21 +229,21 @@ buffer_t btrfs::read(uint64_t addr, uint32_t len) {
     const auto& cp = find_chunk(addr);
     const auto& c = *(btrfs_chunk*)cp.second.data();
 
-    if (c.type & BLOCK_FLAG_RAID0)
+    if (c.type & BTRFS_BLOCK_GROUP_RAID0)
         throw runtime_error("FIXME - RAID 0");
-    else if (c.type & BLOCK_FLAG_RAID1)
+    else if (c.type & BTRFS_BLOCK_GROUP_RAID1)
         throw runtime_error("FIXME - RAID 1");
-    else if (c.type & BLOCK_FLAG_DUPLICATE)
-        throw runtime_error("FIXME - DUPLICATE");
-    else if (c.type & BLOCK_FLAG_RAID10)
+    else if (c.type & BTRFS_BLOCK_GROUP_DUP)
+        throw runtime_error("FIXME - DUP");
+    else if (c.type & BTRFS_BLOCK_GROUP_RAID10)
         throw runtime_error("FIXME - RAID10");
-    else if (c.type & BLOCK_FLAG_RAID5)
+    else if (c.type & BTRFS_BLOCK_GROUP_RAID5)
         throw runtime_error("FIXME - RAID5");
-    else if (c.type & BLOCK_FLAG_RAID6)
+    else if (c.type & BTRFS_BLOCK_GROUP_RAID6)
         throw runtime_error("FIXME - RAID6");
-    else if (c.type & BLOCK_FLAG_RAID1C3)
+    else if (c.type & BTRFS_BLOCK_GROUP_RAID1C3)
         throw runtime_error("FIXME - RAID1C3");
-    else if (c.type & BLOCK_FLAG_RAID1C4)
+    else if (c.type & BTRFS_BLOCK_GROUP_RAID1C4)
         throw runtime_error("FIXME - RAID1C4");
 
     // SINGLE
@@ -447,9 +447,9 @@ void rollback(const string& fn) {
         auto& c = b.find_chunk(addr);
         auto& ci = *(btrfs_chunk*)c.second.data();
 
-        if (ci.type & (BLOCK_FLAG_RAID0 | BLOCK_FLAG_RAID1 | BLOCK_FLAG_DUPLICATE |
-                       BLOCK_FLAG_RAID10 | BLOCK_FLAG_RAID5 | BLOCK_FLAG_RAID6 |
-                       BLOCK_FLAG_RAID1C3 | BLOCK_FLAG_RAID1C4)) {
+        if (ci.type & (BTRFS_BLOCK_GROUP_RAID0 | BTRFS_BLOCK_GROUP_RAID1 | BTRFS_BLOCK_GROUP_DUP |
+                       BTRFS_BLOCK_GROUP_RAID10 | BTRFS_BLOCK_GROUP_RAID5 | BTRFS_BLOCK_GROUP_RAID6 |
+                       BTRFS_BLOCK_GROUP_RAID1C3 | BTRFS_BLOCK_GROUP_RAID1C4)) {
             throw formatted_error("Data chunk {:x} was not SINGLE, cannot process.",
                                   c.first);
         }
