@@ -15,10 +15,17 @@
  * You should have received a copy of the GNU General Public Licence
  * along with Ntfs2btrfs. If not, see <https://www.gnu.org/licenses/>. */
 
-#include "ntfs2btrfs.h"
+module;
+
+#include <string_view>
+#include <string.h>
+#include <stdint.h>
 #include "ebiggers/system_compression.h"
 
+export module decomp;
+
 import formatted_error;
+import buffer_t;
 
 #define LZX_CHUNK_SIZE 32768
 
@@ -91,7 +98,7 @@ static buffer_t lznt1_decompress_chunk(string_view data) {
     return s;
 }
 
-buffer_t lznt1_decompress(string_view compdata, uint32_t size) {
+export buffer_t lznt1_decompress(string_view compdata, uint32_t size) {
     buffer_t ret(size);
     uint8_t* ptr;
 
@@ -150,7 +157,7 @@ buffer_t lznt1_decompress(string_view compdata, uint32_t size) {
     return ret;
 }
 
-buffer_t do_lzx_decompress(string_view compdata, uint32_t size) {
+export buffer_t do_lzx_decompress(string_view compdata, uint32_t size) {
     auto ctx = lzx_allocate_decompressor(LZX_CHUNK_SIZE);
 
     if (!ctx)
@@ -194,7 +201,7 @@ buffer_t do_lzx_decompress(string_view compdata, uint32_t size) {
     return ret;
 }
 
-buffer_t do_xpress_decompress(string_view compdata, uint32_t size, uint32_t chunk_size) {
+export buffer_t do_xpress_decompress(string_view compdata, uint32_t size, uint32_t chunk_size) {
     auto ctx = xpress_allocate_decompressor();
 
     if (!ctx)

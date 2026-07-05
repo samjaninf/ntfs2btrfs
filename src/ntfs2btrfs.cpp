@@ -51,6 +51,7 @@
 import crc32c;
 import formatted_error;
 import compress;
+import decomp;
 
 using namespace std;
 

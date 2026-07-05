@@ -348,11 +348,6 @@ struct std::formatter<enum btrfs_key_type> {
 static const uint64_t image_subvol_id = 0x100;
 static const char image_filename[] = "ntfs.img";
 
-// decomp.cpp
-buffer_t lznt1_decompress(std::string_view compdata, uint32_t size);
-buffer_t do_lzx_decompress(std::string_view compdata, uint32_t size);
-buffer_t do_xpress_decompress(std::string_view compdata, uint32_t size, uint32_t chunk_size);
-
 // sha256.c
 extern "C" void calc_sha256(uint8_t* hash, const void* input, size_t len);
 
