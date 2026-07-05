@@ -711,7 +711,7 @@ void root::create_trees(root& extent_root, enum btrfs_csum_type csum_type) {
 
     auto& th = *(btrfs_header*)buf.data();
     th.fsid = fs_uuid;
-    th.flags = HEADER_FLAG_MIXED_BACKREF | HEADER_FLAG_WRITTEN;
+    th.flags = BTRFS_HEADER_FLAG_MIXED_BACKREF | BTRFS_HEADER_FLAG_WRITTEN;
     th.chunk_tree_uuid = chunk_uuid;
     th.generation = 1;
     th.owner = id;
@@ -760,7 +760,7 @@ void root::create_trees(root& extent_root, enum btrfs_csum_type csum_type) {
                 memset(buf.data(), 0, tree_size);
 
                 th.fsid = fs_uuid;
-                th.flags = HEADER_FLAG_MIXED_BACKREF | HEADER_FLAG_WRITTEN;
+                th.flags = BTRFS_HEADER_FLAG_MIXED_BACKREF | BTRFS_HEADER_FLAG_WRITTEN;
                 th.chunk_tree_uuid = chunk_uuid;
                 th.generation = 1;
                 th.owner = id;
@@ -818,7 +818,7 @@ void root::create_trees(root& extent_root, enum btrfs_csum_type csum_type) {
 
         auto& th = *(btrfs_header*)buf.data();
         th.fsid = fs_uuid;
-        th.flags = HEADER_FLAG_MIXED_BACKREF | HEADER_FLAG_WRITTEN;
+        th.flags = BTRFS_HEADER_FLAG_MIXED_BACKREF | BTRFS_HEADER_FLAG_WRITTEN;
         th.chunk_tree_uuid = chunk_uuid;
         th.generation = 1;
         th.owner = id;
@@ -850,7 +850,7 @@ void root::create_trees(root& extent_root, enum btrfs_csum_type csum_type) {
                 memset(buf.data(), 0, tree_size);
 
                 th.fsid = fs_uuid;
-                th.flags = HEADER_FLAG_MIXED_BACKREF | HEADER_FLAG_WRITTEN;
+                th.flags = BTRFS_HEADER_FLAG_MIXED_BACKREF | BTRFS_HEADER_FLAG_WRITTEN;
                 th.chunk_tree_uuid = chunk_uuid;
                 th.generation = 1;
                 th.owner = id;
