@@ -151,6 +151,8 @@ static const uint16_t max_inline = 2048;
 static const uint64_t max_extent_size = 0x8000000; // 128 MB
 static const uint64_t max_comp_extent_size = 0x20000; // 128 KB
 
+static const uint64_t reserved_area = 0x100000; // 1MB
+
 static constexpr char chunk_error_message[] = "Could not find enough space to create new chunk. Try clearing a few gigabytes of space, or defragging.";
 
 #define EA_NTACL "security.NTACL"
@@ -3672,7 +3674,10 @@ static void convert(ntfs& dev, btrfs_compression_type compression,
         reloc_last_sector = true;
     }
 
-    space_list.emplace_back(0, device_size);
+    if (device_size < reserved_area)
+        throw formatted_error("Device too small for conversion.");
+
+    space_list.emplace_back(reserved_area, device_size);
 
     ntfs_file bitmap(dev, NTFS_BITMAP_INODE);
 
