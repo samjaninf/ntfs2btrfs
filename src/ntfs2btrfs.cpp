@@ -37,6 +37,7 @@
 #include <string.h>
 #include <list>
 #include <map>
+#include <getopt.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -3870,39 +3871,23 @@ static enum btrfs_csum_type parse_csum_type(string_view s) {
         throw formatted_error("Unrecognized hash type {}.", s);
 }
 
-static vector<string_view> read_args(int argc, char* argv[]) {
-    vector<string_view> ret;
-
-    for (int i = 0; i < argc; i++) {
-        ret.emplace_back(argv[i]);
-    }
-
-    return ret;
-}
-
 int main(int argc, char* argv[]) {
+    enum option_values {
+        OPTION_HELP,
+        OPTION_VERSION,
+    };
+
+    static const option options[] = {
+        { "compress", required_argument, nullptr, 'c' },
+        { "hash", required_argument, nullptr, 'h' },
+        { "rollback", no_argument, nullptr, 'r' },
+        { "no-datasum", no_argument, nullptr, 'd' },
+        { "help", no_argument, nullptr, OPTION_HELP },
+        { "version", no_argument, nullptr, OPTION_VERSION },
+        { nullptr, 0, nullptr, 0 }
+    };
+
     try {
-        auto args = read_args(argc, argv);
-
-        if (args.size() == 2 && args[1] == "--version") {
-            print("ntfs2btrfs " PROJECT_VER "\n");
-            return 1;
-        }
-
-        if (args.size() < 2 || (args.size() == 2 && (args[1] == "--help" || args[1] == "/?"))) {
-            print(R"(Usage: ntfs2btrfs [OPTION]... device
-Convert an NTFS filesystem to Btrfs.
-
-  -c, --compress=ALGO        recompress compressed files; ALGO can be 'zlib',
-                               'lzo', 'zstd', or 'none'.
-  -h, --hash=ALGO            checksum algorithm to use; ALGO can be 'crc32c'
-                                (default), 'xxhash', 'sha256', or 'blake2'
-  -r, --rollback             rollback to the original filesystem
-  -d, --no-datasum           disable data checksums
-)");
-            return 1;
-        }
-
         string fn;
         btrfs_compression_type compression;
         enum btrfs_csum_type csum_type;
@@ -3920,43 +3905,59 @@ Convert an NTFS filesystem to Btrfs.
 
         csum_type = btrfs_csum_type::crc32c;
 
-        for (size_t i = 1; i < args.size(); i++) {
-            const auto& arg = args[i];
+        while (true) {
+            int index;
+            auto c = getopt_long(argc, argv, "c:h:rd", options, &index);
 
-            if (!arg.empty() && arg[0] == '-') {
-                if (arg == "-c") {
-                    if (i == args.size() - 1)
-                        throw runtime_error("No value given for -c option.");
+            if (c == -1)
+                break;
 
-                    compression = parse_compression_type(args[i+1]);
-                    i++;
-                } else if (arg.substr(0, 11) == "--compress=")
-                    compression = parse_compression_type(arg.substr(11));
-                else if (arg == "-h") {
-                    if (i == args.size() - 1)
-                        throw runtime_error("No value given for -h option.");
+            switch (c) {
+                case 'c':
+                    compression = parse_compression_type(optarg);
+                break;
 
-                    csum_type = parse_csum_type(args[i+1]);
-                    i++;
-                } else if (arg.substr(0, 7) == "--hash=")
-                    csum_type = parse_csum_type(arg.substr(11));
-                else if (arg == "-r" || arg == "--rollback")
+                case 'h':
+                    csum_type = parse_csum_type(optarg);
+                break;
+
+                case 'r':
                     do_rollback = true;
-                else if (arg == "-d" || arg == "--no-datasum")
+                break;
+
+                case 'd':
                     nocsum = true;
-                else
-                    throw formatted_error("Unrecognized option {}.", arg);
+                break;
 
-            } else {
-                if (!fn.empty())
-                    throw runtime_error("Multiple devices given.");
+                case OPTION_HELP:
+                    print(R"(Usage: ntfs2btrfs [OPTION]... device
+Convert an NTFS filesystem to Btrfs.
 
-                fn = arg;
+  -c, --compress=ALGO        recompress compressed files; ALGO can be 'zlib',
+                               'lzo', 'zstd', or 'none'.
+  -h, --hash=ALGO            checksum algorithm to use; ALGO can be 'crc32c'
+                                (default), 'xxhash', 'sha256', or 'blake2'
+  -r, --rollback             rollback to the original filesystem
+  -d, --no-datasum           disable data checksums
+)");
+                    return 1;
+
+                case OPTION_VERSION:
+                    print("ntfs2btrfs " PROJECT_VER "\n");
+                    return 1;
+
+                case '?':
+                    return 1;
             }
         }
 
-        if (fn.empty())
+        if (argc == optind)
             throw runtime_error("No device given.");
+
+        if (argc > optind + 1)
+            throw runtime_error("Multiple devices given.");
+
+        fn = argv[optind];
 
 #if defined(__i386__) || defined(__x86_64__)
         check_cpu();
