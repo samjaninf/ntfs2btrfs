@@ -38,6 +38,7 @@
 #include <list>
 #include <map>
 #include <getopt.h>
+#include <assert.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -1116,6 +1117,8 @@ static void update_extent_root(root& extent_root, enum btrfs_csum_type csum_type
                 for (const auto& c : chunks) {
                     if (c.offset == ln[i].key.objectid) {
                         bgi.used = c.used;
+
+                        assert(bgi.used <= c.length);
 
                         changed = true;
                     }
