@@ -18,6 +18,7 @@
 module;
 
 #include "ntfs2btrfs.h"
+#include "config.h"
 #include <iostream>
 #include <fstream>
 #include <functional>

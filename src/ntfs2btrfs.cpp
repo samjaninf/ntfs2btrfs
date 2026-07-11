@@ -34,6 +34,9 @@
 #include <span>
 #include <optional>
 #include <print>
+#include <string.h>
+#include <list>
+#include <map>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -61,6 +64,37 @@ import unicode;
 
 using namespace std;
 
+struct space {
+    space(uint64_t offset, uint64_t length) : offset(offset), length(length) { }
+
+    uint64_t offset;
+    uint64_t length;
+};
+
+struct chunk {
+    chunk(uint64_t offset, uint64_t length, uint64_t disk_start, uint64_t type) : offset(offset), length(length), disk_start(disk_start), type(type) { }
+
+    uint64_t offset;
+    uint64_t length;
+    uint64_t disk_start;
+    uint64_t type;
+    list<space> space_list;
+    bool added = false;
+    uint64_t used = 0;
+};
+
+struct data_alloc {
+    data_alloc(uint64_t offset, uint64_t length, uint64_t inode = 0, uint64_t file_offset = 0, bool relocated = false, bool not_in_img = false) :
+    offset(offset), length(length), inode(inode), file_offset(file_offset), relocated(relocated), not_in_img(not_in_img) { }
+
+    uint64_t offset;
+    uint64_t length;
+    uint64_t inode;
+    uint64_t file_offset;
+    bool relocated;
+    bool not_in_img;
+};
+
 class root {
 public:
     root(uint64_t id) : id(id) { }
@@ -79,6 +113,14 @@ public:
     bool readonly = false;
     map<uint64_t, uint64_t> dir_seqs;
     map<uint64_t, uint64_t> dir_size;
+};
+
+struct relocation {
+    relocation(uint64_t old_start, uint64_t length, uint64_t new_start) : old_start(old_start), length(length), new_start(new_start) { }
+
+    uint64_t old_start;
+    uint64_t length;
+    uint64_t new_start;
 };
 
 static list<chunk> chunks;
