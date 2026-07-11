@@ -3530,7 +3530,7 @@ static void protect_cluster(ntfs& dev, runs_t& runs, uint64_t cluster) {
 static void protect_superblocks(ntfs& dev, runs_t& runs) {
     uint32_t cluster_size = dev.boot_sector->BytesPerSector * dev.boot_sector->SectorsPerCluster;
 
-    unsigned int i = 0;
+    unsigned int i = 1; // first superblock is in first megabyte
     while (btrfs_superblock_addrs[i] != 0) {
         if (btrfs_superblock_addrs[i] > device_size - sizeof(btrfs_super_block))
             break;
@@ -3545,9 +3545,12 @@ static void protect_superblocks(ntfs& dev, runs_t& runs) {
         i++;
     }
 
-    // also relocate first cluster
+    // also relocate first 1MB
 
-    protect_cluster(dev, runs, 0);
+    // FIXME - should try to merge these together
+    for (size_t i = 0; i < reserved_area / cluster_size; i++) {
+        protect_cluster(dev, runs, i);
+    }
 
     if (reloc_last_sector)
         protect_cluster(dev, runs, device_size / cluster_size);
