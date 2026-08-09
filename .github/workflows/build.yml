@@ -15,7 +15,6 @@ jobs:
           cmake -DCMAKE_BUILD_TYPE=Debug \
             -DCMAKE_INSTALL_PREFIX=${PWD}/install/debug \
             -DCMAKE_INSTALL_INCLUDEDIR=../include \
-            -DWITH_OPENSSL=ON -DENABLE_KRB5=ON \
             -GNinja \
             -S ${SHORT_SHA} -B debug-work && \
           cmake --build debug-work --parallel `nproc` && \
@@ -23,7 +22,6 @@ jobs:
       - run: |
           cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             -DCMAKE_INSTALL_PREFIX=${PWD}/install \
-            -DWITH_OPENSSL=ON -DENABLE_KRB5=ON \
             -GNinja \
             -S ${SHORT_SHA} -B release-work && \
           cmake --build release-work --parallel `nproc` && \
