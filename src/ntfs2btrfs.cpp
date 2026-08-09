@@ -2423,6 +2423,9 @@ static void add_inode(root& r, uint64_t inode, uint64_t ntfs_inode, bool& is_dir
 
                     eas.emplace(ea_name, move(ea_value));
 
+                    if (ead.NextEntryOffset == 0)
+                        break;
+
                     sv = sv.substr(ead.NextEntryOffset);
                 } while (!sv.empty());
 
