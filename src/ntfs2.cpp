@@ -137,6 +137,9 @@ void read_nonresident_mappings(const ATTRIBUTE_RECORD_HEADER& att, list<mapping>
 
         next_vcn += v_val;
 
+        if (next_vcn > max_cluster)
+            next_vcn = max_cluster;
+
         if (l != 0) {
             l_val = *(int64_t*)stream;
             l_val &= (1ull << (l * 8)) - 1;
@@ -147,9 +150,6 @@ void read_nonresident_mappings(const ATTRIBUTE_RECORD_HEADER& att, list<mapping>
             stream += l;
 
             current_lcn += l_val;
-
-            if (next_vcn > max_cluster)
-                next_vcn = max_cluster;
 
             mappings.emplace_back(current_lcn, current_vcn, next_vcn - current_vcn);
         } else
