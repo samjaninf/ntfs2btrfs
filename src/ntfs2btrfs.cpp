@@ -3588,6 +3588,9 @@ static void calc_used_space(const runs_t& runs, uint32_t cluster_size) {
     for (const auto& rl : runs) {
         uint64_t offset = (rl.first * data_chunk_size) + chunk_virt_offset;
 
+        if (rl.first == 0)
+            offset += reserved_area;
+
         for (auto& c : chunks) {
             if (offset == c.offset) {
                 for (const auto& r : rl.second) {
