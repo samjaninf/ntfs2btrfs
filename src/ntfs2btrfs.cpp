@@ -3672,6 +3672,9 @@ static void convert(ntfs& dev, btrfs_compression_type compression,
     if (cluster_size % sector_size != 0)
         throw formatted_error("Cluster size {} is not a multiple of sector size {}.", cluster_size, sector_size);
 
+    if (cluster_size > 1048576)
+        throw formatted_error("Unsupported cluster size {}.", cluster_size);
+
     {
         default_random_engine generator;
 
