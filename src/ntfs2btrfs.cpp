@@ -371,6 +371,9 @@ static void create_data_chunks(ntfs& dev, const buffer_t& bmpdata) {
                 c.space_list.emplace_back(c.offset + (last * cluster_size), chunk_length - (last * cluster_size));
 
             remove_superblocks(c);
+
+            if (c.disk_start < reserved_area)
+                space_list_remove(c.space_list, c.offset, min(c.length, reserved_area - c.disk_start));
         }
 
         addr += data_chunk_size;
