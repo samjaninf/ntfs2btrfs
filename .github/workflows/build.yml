@@ -5,7 +5,7 @@ jobs:
     runs-on: ubuntu-rolling
     steps:
       - run: apt-get update
-      - run: apt-get install -y g++ git cmake nodejs pkg-config libfmt-dev liblzo2-dev libzstd-dev zlib1g-dev
+      - run: apt-get install -y g++ git cmake nodejs pkg-config libfmt-dev liblzo2-dev libzstd-dev zlib1g-dev ninja-build
       - run: echo "SHORT_SHA=`echo ${{ github.sha }} | cut -c1-8`" >> $GITHUB_ENV
       - run: git clone ${{ github.server_url }}/${{ github.repository }} ${SHORT_SHA}
       - run: cd ${SHORT_SHA} && git checkout ${{ github.sha }}
@@ -16,6 +16,7 @@ jobs:
             -DCMAKE_INSTALL_PREFIX=${PWD}/install/debug \
             -DCMAKE_INSTALL_INCLUDEDIR=../include \
             -DWITH_OPENSSL=ON -DENABLE_KRB5=ON \
+            -GNinja \
             -S ${SHORT_SHA} -B debug-work && \
           cmake --build debug-work --parallel `nproc` && \
           cmake --install debug-work
@@ -23,6 +24,7 @@ jobs:
           cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             -DCMAKE_INSTALL_PREFIX=${PWD}/install \
             -DWITH_OPENSSL=ON -DENABLE_KRB5=ON \
+            -GNinja \
             -S ${SHORT_SHA} -B release-work && \
           cmake --build release-work --parallel `nproc` && \
           cmake --install release-work
