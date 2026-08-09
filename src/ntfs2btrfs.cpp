@@ -354,8 +354,12 @@ static void create_data_chunks(ntfs& dev, const buffer_t& bmpdata) {
             used.emplace_back(run_start, pos - run_start);
 
         if (!used.empty()) {
+            uint64_t shift = addr > reserved_area ? 0 : (reserved_area - addr);
+
             space_list_remove(space_list, addr, chunk_length);
-            chunks.emplace_back(addr + chunk_virt_offset, chunk_length, addr, BTRFS_BLOCK_GROUP_DATA);
+            chunks.emplace_back(addr + chunk_virt_offset + shift,
+                                chunk_length - shift, addr + shift,
+                                BTRFS_BLOCK_GROUP_DATA);
 
             auto& c = chunks.back();
             uint64_t last = 0;
