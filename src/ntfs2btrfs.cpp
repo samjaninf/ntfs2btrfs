@@ -2183,6 +2183,12 @@ static void add_inode(root& r, uint64_t inode, uint64_t ntfs_inode, bool& is_dir
                             memset(ads_data.data(), 0, ads_data.size());
 
                             for (const auto& m : ads_mappings) {
+                                if (m.lcn == 0) // sparse
+                                    continue;
+
+                                if (m.vcn + m.length > ads_data.size() / cluster_size)
+                                    throw formatted_error("ADS mappings went beyond end of buffer");
+
                                 dev.read(m.lcn * cluster_size, ads_data.data() + (m.vcn * cluster_size),
                                          (size_t)(m.length * cluster_size));
                             }
@@ -2261,6 +2267,12 @@ static void add_inode(root& r, uint64_t inode, uint64_t ntfs_inode, bool& is_dir
                     memset(reparse_point.data(), 0, reparse_point.size());
 
                     for (const auto& m : rp_mappings) {
+                        if (m.lcn == 0) // sparse
+                            continue;
+
+                        if (m.vcn + m.length > reparse_point.size() / cluster_size)
+                            throw formatted_error("Reparse point mappings went beyond end of buffer");
+
                         dev.read(m.lcn * cluster_size, reparse_point.data() + (m.vcn * cluster_size),
                                  (size_t)(m.length * cluster_size));
                     }
@@ -2342,6 +2354,12 @@ static void add_inode(root& r, uint64_t inode, uint64_t ntfs_inode, bool& is_dir
                     memset(sd.data(), 0, sd.size());
 
                     for (const auto& m : sd_mappings) {
+                        if (m.lcn == 0) // sparse
+                            continue;
+
+                        if (m.vcn + m.length > sd.size() / cluster_size)
+                            throw formatted_error("SD mappings went beyond end of buffer");
+
                         dev.read(m.lcn * cluster_size, sd.data() + (m.vcn * cluster_size),
                                  (size_t)(m.length * cluster_size));
                     }
@@ -2365,6 +2383,12 @@ static void add_inode(root& r, uint64_t inode, uint64_t ntfs_inode, bool& is_dir
                     memset(eabuf.data(), 0, eabuf.size());
 
                     for (const auto& m : ea_mappings) {
+                        if (m.lcn == 0) // sparse
+                            continue;
+
+                        if (m.vcn + m.length > eabuf.size() / cluster_size)
+                            throw formatted_error("EA mappings went beyond end of buffer");
+
                         dev.read(m.lcn * cluster_size, eabuf.data() + (m.vcn * cluster_size),
                                  (size_t)(m.length * cluster_size));
                     }
