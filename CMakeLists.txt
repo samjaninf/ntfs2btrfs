@@ -87,6 +87,10 @@ if(WITH_ZSTD)
     target_link_libraries(ntfs2btrfs ${ZSTD_LINK_LIBRARIES})
 endif()
 
+if(MINGW)
+    target_link_libraries(ntfs2btrfs stdc++exp)
+endif()
+
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 # Work around bug in MSVC version of cmake - see https://gitlab.kitware.com/cmake/cmake/-/merge_requests/4257
