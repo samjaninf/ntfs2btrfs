@@ -53,6 +53,18 @@ below.
 Changelog
 ---------
 
+* 20260810
+  * Fixed conversion with large NTFS clusters
+  * Fixed volume label not being terminated properly
+  * Fixed `btrfs check` warning about DEV_ITEM's bytes_used in the superblock
+  * We now keep the first megabyte of a device clear (fixes a Linux `dmesg` warning)
+  * `image` subvolume is now actually created read-only, as intended
+  * Added some sanity checking, so that corrupt volumes show an error rather than segfaulting
+  * Switched to using the official names for structs and constants, rather than some I had apparently made up at some point
+  * Switched to using C++ modules (needs GCC 15, perhaps even 16)
+  * Switched to using std::format (no longer need libfmt)
+  * Switched to using `getopt` rather than a cobbled-together equivalent
+
 * 20250616
   * Fixed compilation on GCC 15
 
