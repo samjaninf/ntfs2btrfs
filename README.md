@@ -152,7 +152,7 @@ What doesn't work
 * Windows' old extended attributes (you're not using these)
 * Large (i.e >16KB) ADSes (you're not using these either)
 * Preservation of the case-sensitivity flag
-* Unusual cluster sizes (i.e. not 4 KB)
+* Cluster sizes over 1MB
 * Encrypted files
 
 Can I boot Windows from Btrfs with this?
